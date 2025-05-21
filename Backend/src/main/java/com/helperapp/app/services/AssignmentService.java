@@ -1,19 +1,26 @@
 package com.helperapp.app.services;
 
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.helperapp.app.models.Assignment;
+import com.helperapp.app.models.Event;
 import com.helperapp.app.repositories.AssignmentRepository;
+import com.helperapp.app.repositories.EventRepository;
 
 @Service
 public class AssignmentService {
 
     @Autowired
     private AssignmentRepository assignmentRepository;
+
+    @Autowired
+    private EventRepository eventRepository;
 
     public List<Assignment> getAllAssignments() {
         return assignmentRepository.findAll();
@@ -24,27 +31,98 @@ public class AssignmentService {
     }
 
     public Assignment createAssignment(Assignment assignment) {
+        validateAssignment(assignment);
         return assignmentRepository.save(assignment);
     }
 
-    public Optional<Assignment> updateAssignment(String id, Assignment assignmentDetails) {
+    public Optional<Assignment> updateAssignment(String id, Assignment updatedDetails) {
         Optional<Assignment> optionalAssignment = assignmentRepository.findById(id);
-        if (optionalAssignment.isPresent()) {
-            Assignment assignment = optionalAssignment.get();
-            assignment.setEventDay(assignmentDetails.getEventDay());
-            assignment.setAssignments(assignmentDetails.getAssignments());
-            return Optional.of(assignmentRepository.save(assignment));
-        } else {
+
+        if (optionalAssignment.isEmpty()) {
             return Optional.empty();
         }
+
+        Assignment existing = optionalAssignment.get();
+
+        // Only check for conflicts if the key fields actually change
+        boolean isEventDayChanged = !existing.getEventDay().equals(updatedDetails.getEventDay());
+        boolean isHelperChanged = !existing.getHelperId().equals(updatedDetails.getHelperId());
+
+        if (isEventDayChanged || isHelperChanged) {
+            // Check if another assignment exists for this helper on the same eventId and new eventDay
+            Optional<Assignment> conflict = assignmentRepository.findByEventIdAndEventDayAndHelperId(
+                    updatedDetails.getEventId(),
+                    updatedDetails.getEventDay(),
+                    updatedDetails.getHelperId()
+            );
+
+            if (conflict.isPresent() && !conflict.get().getId().equals(id)) {
+                throw new IllegalArgumentException("This helper is already assigned to a station on this event day.");
+            }
+        }
+
+        // Optional: validate that the new eventDay exists for the event
+        Event event = eventRepository.findById(updatedDetails.getEventId())
+                .orElseThrow(() -> new IllegalArgumentException("Event not found."));
+
+        List<Map<LocalDate, Number>> days = event.getEventDays();
+        boolean eventDayExists = days.stream()
+                .anyMatch(map -> map.values().stream()
+                .anyMatch(num -> String.valueOf(num.intValue()).equals(updatedDetails.getEventDay())));
+
+        if (!eventDayExists) {
+            throw new IllegalArgumentException("Invalid event day. Event has only " + days.size()
+                    + " days on the following dates: " + days.stream().map(Map::keySet).toList());
+        }
+
+        // Update fields
+        existing.setEventDay(updatedDetails.getEventDay());
+        existing.setHelperId(updatedDetails.getHelperId());
+        existing.setStationId(updatedDetails.getStationId());
+
+        return Optional.of(assignmentRepository.save(existing));
     }
 
     public boolean deleteAssignment(String id) {
         if (assignmentRepository.existsById(id)) {
             assignmentRepository.deleteById(id);
             return true;
-        } else {
-            return false;
+        }
+        return false;
+    }
+
+    private void validateAssignment(Assignment assignment) {
+        Optional<Event> eventOpt = eventRepository.findById(assignment.getEventId());
+
+        if (eventOpt.isEmpty()) {
+            throw new IllegalArgumentException("Event with ID " + assignment.getEventId() + " not found.");
+        }
+
+        Event event = eventOpt.get();
+        List<Map<LocalDate, Number>> eventDays = event.getEventDays();
+
+        boolean isValidDay = eventDays.stream()
+                .anyMatch(dayMap -> dayMap.values().stream()
+                .anyMatch(val -> String.valueOf(val.intValue()).equals(assignment.getEventDay())));
+
+        if (!isValidDay) {
+            List<String> validDates = eventDays.stream()
+                    .map(dayMap -> dayMap.keySet().iterator().next().toString())
+                    .toList();
+
+            throw new IllegalArgumentException(
+                    "Invalid event day. Event has only " + eventDays.size()
+                    + " days on the following dates: " + validDates
+            );
+        }
+
+        // Optional: Prevent same helper from being assigned twice to same eventDay
+        boolean duplicateExists = assignmentRepository.existsByHelperIdAndEventDayAndEventId(
+                assignment.getHelperId(), assignment.getEventDay(), assignment.getEventId()
+        );
+
+        if (duplicateExists) {
+            throw new IllegalArgumentException("This helper is already assigned on this event day.");
         }
     }
 }

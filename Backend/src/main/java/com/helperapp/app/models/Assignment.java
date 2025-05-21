@@ -1,7 +1,5 @@
 package com.helperapp.app.models;
 
-import java.util.Map;
-
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -17,9 +15,15 @@ public class Assignment {
     private String id;
 
     @NonNull
+    private String eventId;
+
+    @NonNull
     private String eventDay;
 
     @NonNull
-    private Map<String, String> assignments; // Map between helper and Station: HelperID, StationID
+    private String helperId;
+
+    @NonNull
+    private String stationId;
 
 }   
