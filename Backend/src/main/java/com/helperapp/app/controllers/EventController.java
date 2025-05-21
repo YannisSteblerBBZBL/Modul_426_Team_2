@@ -1,6 +1,9 @@
 package com.helperapp.app.controllers;
 
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -52,5 +55,12 @@ public class EventController {
         return eventService.deleteEvent(id)
                 ? ResponseEntity.noContent().build()
                 : ResponseEntity.notFound().build();
+    }
+
+    @PutMapping("/eventDays/{id}")
+    public ResponseEntity<Event> updateEventDays(@PathVariable String id, @RequestBody List<Map<LocalDate, Number>> newEventDays) {
+
+        Optional<Event> updatedEvent = eventService.updateEventDays(id, newEventDays);
+        return updatedEvent.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 }

@@ -91,4 +91,11 @@ public class EventService {
         }
         return false;
     }
+
+    public Optional<Event> updateEventDays(String id, List<Map<LocalDate, Number>> newEventDays) {
+    return eventRepository.findById(id).map(event -> {
+        event.setEventDays(newEventDays);
+        return eventRepository.save(event);
+    });
+}
 }
