@@ -16,7 +16,7 @@ import lombok.Data;
 public class Event {
     
     @Id
-    private Long id;
+    private String id;
 
     @NonNull
     private String name;

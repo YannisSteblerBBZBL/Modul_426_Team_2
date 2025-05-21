@@ -29,7 +29,7 @@ public class HelperController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Helper> getHelperById(@PathVariable Long id) {
+    public ResponseEntity<Helper> getHelperById(@PathVariable String id) {
         return helperService.getHelperById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
@@ -41,14 +41,14 @@ public class HelperController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Helper> updateHelper(@PathVariable Long id, @RequestBody Helper helper) {
+    public ResponseEntity<Helper> updateHelper(@PathVariable String id, @RequestBody Helper helper) {
         return helperService.updateHelper(id, helper)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteHelper(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteHelper(@PathVariable String id) {
         return helperService.deleteHelper(id)
                 ? ResponseEntity.noContent().build()
                 : ResponseEntity.notFound().build();

@@ -15,7 +15,7 @@ import lombok.Data;
 public class Helper {
 
     @Id
-    private Long id;
+    private String id;
 
     @NonNull
     private String firstname;
@@ -28,7 +28,6 @@ public class Helper {
     @NonNull
     private LocalDate birthdate;
 
-    @NonNull
     private String age;
 
     private List<Number> presence; // List of presence EventDays (i.g. 1, 4, 5)

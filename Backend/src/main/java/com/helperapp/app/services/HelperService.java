@@ -1,5 +1,7 @@
 package com.helperapp.app.services;
 
+import java.time.LocalDate;
+import java.time.Period;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,21 +21,22 @@ public class HelperService {
         return helperRepository.findAll();
     }
 
-    public Optional<Helper> getHelperById(Long id) {
+    public Optional<Helper> getHelperById(String id) {
         return helperRepository.findById(id);
     }
 
     public Helper createHelper(Helper helper) {
+        helper.setAge(calculateAge(helper.getBirthdate()));
         return helperRepository.save(helper);
     }
 
-    public Optional<Helper> updateHelper(Long id, Helper updatedHelper) {
+    public Optional<Helper> updateHelper(String id, Helper updatedHelper) {
         return helperRepository.findById(id).map(helper -> {
             helper.setFirstname(updatedHelper.getFirstname());
             helper.setLastname(updatedHelper.getLastname());
             helper.setEmail(updatedHelper.getEmail());
             helper.setBirthdate(updatedHelper.getBirthdate());
-            helper.setAge(updatedHelper.getAge());
+            helper.setAge(calculateAge(updatedHelper.getBirthdate()));
             helper.setPresence(updatedHelper.getPresence());
             helper.setPreferences(updatedHelper.getPreferences());
             helper.setPreferencedHelpers(updatedHelper.getPreferencedHelpers());
@@ -42,11 +45,16 @@ public class HelperService {
         });
     }
 
-    public boolean deleteHelper(Long id) {
+    public boolean deleteHelper(String id) {
         if (helperRepository.existsById(id)) {
             helperRepository.deleteById(id);
             return true;
         }
         return false;
+    }
+
+    private String calculateAge(LocalDate birthdate) {
+        if (birthdate == null) return "Unknown";
+        return String.valueOf(Period.between(birthdate, LocalDate.now()).getYears());
     }
 }
