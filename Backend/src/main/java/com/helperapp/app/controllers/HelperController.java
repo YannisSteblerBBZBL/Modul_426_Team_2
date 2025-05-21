@@ -17,7 +17,7 @@ import com.helperapp.app.models.Helper;
 import com.helperapp.app.services.HelperService;
 
 @RestController
-@RequestMapping("/helpers")
+@RequestMapping("/api/helpers")
 public class HelperController {
 
     @Autowired

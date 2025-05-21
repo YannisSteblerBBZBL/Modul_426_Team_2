@@ -17,7 +17,7 @@ import com.helperapp.app.models.Station;
 import com.helperapp.app.services.StationService;
 
 @RestController
-@RequestMapping("/stations")
+@RequestMapping("/api/stations")
 public class StationController {
 
     @Autowired
