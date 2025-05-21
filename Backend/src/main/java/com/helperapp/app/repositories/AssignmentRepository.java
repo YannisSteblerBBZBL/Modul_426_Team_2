@@ -9,4 +9,5 @@ import com.helperapp.app.models.Assignment;
 public interface AssignmentRepository extends MongoRepository<Assignment, Object>{
     boolean existsByHelperIdAndEventDayAndEventId(String helperId, String eventDay, String eventId);
     Optional<Assignment> findByEventIdAndEventDayAndHelperId(String eventId, String eventDay, String helperId);
+
 }
