@@ -1,5 +1,9 @@
 package com.helperapp.app.repositories;
 
-public class StationRepository {
+import org.springframework.data.mongodb.repository.MongoRepository;
+
+import com.helperapp.app.models.Station;
+
+public interface StationRepository extends MongoRepository<Station, Object>{
     
 }
