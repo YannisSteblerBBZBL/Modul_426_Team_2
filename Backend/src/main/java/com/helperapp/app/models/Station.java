@@ -18,5 +18,8 @@ public class Station {
     private String name;
 
     @NonNull
+    private Number neededHelpers;
+
+    @NonNull
     private Boolean is18Plus;
 }
