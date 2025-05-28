@@ -18,6 +18,8 @@ public class Assignment {
     @Id
     private String id;
 
+    private String userId;
+
     @NonNull
     private String eventId;
 

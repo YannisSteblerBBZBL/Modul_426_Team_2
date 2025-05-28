@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -12,6 +13,7 @@ import com.helperapp.app.models.Assignment;
 import com.helperapp.app.models.Event;
 import com.helperapp.app.repositories.AssignmentRepository;
 import com.helperapp.app.repositories.EventRepository;
+import com.helperapp.app.security.JwtHelper;
 
 @Service
 public class AssignmentService {
@@ -22,15 +24,22 @@ public class AssignmentService {
     @Autowired
     private EventRepository eventRepository;
 
+    @Autowired
+    private JwtHelper jwtHelper;
+
     public List<Assignment> getAllAssignments() {
-        return assignmentRepository.findAll();
+        String currentUserId = jwtHelper.getUserIdFromToken();
+        return assignmentRepository.findAll().stream().filter(a -> a.getUserId().equals(currentUserId)).collect(Collectors.toList());
     }
 
     public Optional<Assignment> getAssignmentById(String id) {
-        return assignmentRepository.findById(id);
+        Optional<Assignment> assignment = assignmentRepository.findById(id);
+        String currentUserId = jwtHelper.getUserIdFromToken();
+        return assignment.filter(a -> a.getUserId().equals(currentUserId));
     }
 
     public Assignment createAssignment(Assignment assignment) {
+        assignment.setUserId(jwtHelper.getUserIdFromToken());
         validateAssignment(assignment);
         return assignmentRepository.save(assignment);
     }
@@ -43,7 +52,12 @@ public class AssignmentService {
         }
 
         Assignment existing = optionalAssignment.get();
+        String currentUserId = jwtHelper.getUserIdFromToken();
 
+        if (!existing.getUserId().equals(currentUserId)) {
+            throw new SecurityException("Access denied: You are not allowed to update this assignment.");
+        }
+        
         // Only check for conflicts if the key fields actually change
         boolean isEventDayChanged = !existing.getEventDay().equals(updatedDetails.getEventDay());
         boolean isHelperChanged = !existing.getHelperId().equals(updatedDetails.getHelperId());
@@ -84,7 +98,10 @@ public class AssignmentService {
     }
 
     public boolean deleteAssignment(String id) {
-        if (assignmentRepository.existsById(id)) {
+        Optional<Assignment> assignment = assignmentRepository.findById(id);
+        String currentUserId = jwtHelper.getUserIdFromToken();
+
+        if (assignment.isPresent() && assignment.get().getUserId().equals(currentUserId)) {
             assignmentRepository.deleteById(id);
             return true;
         }
