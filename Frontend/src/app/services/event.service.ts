@@ -8,7 +8,7 @@ import { Event, EventDay } from '../models/event.interface';
   providedIn: 'root'
 })
 export class EventService {
-  private apiUrl = `${environment.apiUrl}/api/events`;
+  private apiUrl = `${environment.apiUrl}/events`;
 
   constructor(private http: HttpClient) { }
 
@@ -23,4 +23,4 @@ export class EventService {
   updateEventDays(id: string, eventDays: EventDay[]): Observable<Event> {
     return this.http.put<Event>(`${this.apiUrl}/${id}/days`, { eventDays });
   }
-} 
+}

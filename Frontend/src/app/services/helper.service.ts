@@ -8,7 +8,7 @@ import { Helper } from '../models/helper.interface';
   providedIn: 'root'
 })
 export class HelperService {
-  private apiUrl = `${environment.apiUrl}/api/helpers`;
+  private apiUrl = `${environment.apiUrl}/helpers`;
 
   constructor(private http: HttpClient) { }
 
@@ -27,4 +27,4 @@ export class HelperService {
   updateHelperPresence(id: string, presence: number[]): Observable<Helper> {
     return this.http.put<Helper>(`${this.apiUrl}/${id}/presence`, { presence });
   }
-} 
+}

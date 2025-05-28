@@ -8,7 +8,7 @@ import { Station } from '../models/station.interface';
   providedIn: 'root'
 })
 export class StationService {
-  private apiUrl = `${environment.apiUrl}/api/stations`;
+  private apiUrl = `${environment.apiUrl}/stations`;
 
   constructor(private http: HttpClient) { }
 
@@ -19,4 +19,4 @@ export class StationService {
   updateStationHelperRequirements(id: string, neededHelpers: number, is18Plus: boolean): Observable<Station> {
     return this.http.put<Station>(`${this.apiUrl}/${id}/requirements`, { neededHelpers, is18Plus });
   }
-} 
+}

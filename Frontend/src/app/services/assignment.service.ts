@@ -8,7 +8,7 @@ import { Assignment } from '../models/assignment.interface';
   providedIn: 'root'
 })
 export class AssignmentService {
-  private apiUrl = `${environment.apiUrl}/api/assignments`;
+  private apiUrl = `${environment.apiUrl}/assignments`;
 
   constructor(private http: HttpClient) { }
 
