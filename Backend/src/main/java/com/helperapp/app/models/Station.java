@@ -14,6 +14,8 @@ public class Station {
     @Id
     private String id;
 
+    private String userId;
+
     @NonNull
     private String name;
 

@@ -17,6 +17,8 @@ public class Helper {
     @Id
     private String id;
 
+    private String userId;
+
     @NonNull
     private String firstname;
 

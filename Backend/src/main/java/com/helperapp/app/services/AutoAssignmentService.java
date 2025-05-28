@@ -18,6 +18,7 @@ import com.helperapp.app.repositories.AssignmentRepository;
 import com.helperapp.app.repositories.EventRepository;
 import com.helperapp.app.repositories.HelperRepository;
 import com.helperapp.app.repositories.StationRepository;
+import com.helperapp.app.security.JwtHelper;
 
 @Service
 public class AutoAssignmentService {
@@ -34,11 +35,23 @@ public class AutoAssignmentService {
     @Autowired
     private AssignmentRepository assignmentRepository;
 
-    public void generateAssignments(String eventId) {
-        Event event = eventRepository.findById(eventId).orElseThrow(() -> new IllegalArgumentException("Event not found"));
+    @Autowired
+    private JwtHelper jwtHelper;
 
-        List<Helper> helpers = helperRepository.findAll();
-        List<Station> stations = stationRepository.findAll();
+    public void generateAssignments(String eventId) {
+        String currentUserId = jwtHelper.getUserIdFromToken();
+
+        Event event = eventRepository.findById(eventId)
+            .filter(e -> e.getUserId().equals(currentUserId))
+            .orElseThrow(() -> new SecurityException("Access denied: You don't own this event."));
+
+        List<Helper> helpers = helperRepository.findAll().stream()
+            .filter(h -> h.getUserId().equals(currentUserId))
+            .toList();
+
+        List<Station> stations = stationRepository.findAll().stream()
+            .filter(s -> s.getUserId().equals(currentUserId))
+            .toList();
 
         // Mapping: dayNumber -> date
         Map<Integer, LocalDate> dayNumberToDateMap = new HashMap<>();
@@ -48,7 +61,6 @@ public class AutoAssignmentService {
                 dayNumberToDateMap.put(dayNumber, entry.getKey());
             }
         }
-        System.out.println("Day Number to Date Map: " + dayNumberToDateMap);
 
         for (Map.Entry<Integer, LocalDate> eventDayEntry : dayNumberToDateMap.entrySet()) {
             int dayNumber = eventDayEntry.getKey();
@@ -59,30 +71,8 @@ public class AutoAssignmentService {
                 int needed = station.getNeededHelpers().intValue();
                 int assigned = 0;
 
-                // Bevorzugte Helfer
-                for (Iterator<Helper> iterator = availableHelpers.iterator(); iterator.hasNext(); ) {
-                    if (assigned >= needed) break;
-
-                    Helper helper = iterator.next();
-                    if (!helper.getPresence().contains(dayNumber)) continue;
-
-                    int age = Integer.parseInt(helper.getAge()); 
-                    if (station.getIs18Plus() && age <= 18) continue;
-
-                    boolean alreadyAssigned = assignmentRepository.existsByHelperIdAndEventDayAndEventId(
-                            helper.getId(), String.valueOf(dayNumber), eventId
-                    );
-                    if (alreadyAssigned) continue;
-
-                    if (helper.getPreferences() != null && helper.getPreferences().contains(station.getName())) {
-                        saveAssignment(eventId, dayNumber, helper.getId(), station.getId());
-                        assigned++;
-                        iterator.remove();
-                    }
-                }
-
-                // Fallback: beliebige Helfer
-                for (Iterator<Helper> iterator = availableHelpers.iterator(); iterator.hasNext(); ) {
+                // Preferred helpers
+                for (Iterator<Helper> iterator = availableHelpers.iterator(); iterator.hasNext();) {
                     if (assigned >= needed) break;
 
                     Helper helper = iterator.next();
@@ -92,11 +82,31 @@ public class AutoAssignmentService {
                     if (station.getIs18Plus() && age < 18) continue;
 
                     boolean alreadyAssigned = assignmentRepository.existsByHelperIdAndEventDayAndEventId(
-                            helper.getId(), String.valueOf(dayNumber), eventId
-                    );
+                            helper.getId(), String.valueOf(dayNumber), eventId);
                     if (alreadyAssigned) continue;
 
-                    saveAssignment(eventId, dayNumber, helper.getId(), station.getId());
+                    if (helper.getPreferences() != null && helper.getPreferences().contains(station.getName())) {
+                        saveAssignment(eventId, dayNumber, helper.getId(), station.getId(), currentUserId);
+                        assigned++;
+                        iterator.remove();
+                    }
+                }
+
+                // Fallback: any available helper
+                for (Iterator<Helper> iterator = availableHelpers.iterator(); iterator.hasNext();) {
+                    if (assigned >= needed) break;
+
+                    Helper helper = iterator.next();
+                    if (!helper.getPresence().contains(dayNumber)) continue;
+
+                    int age = Integer.parseInt(helper.getAge());
+                    if (station.getIs18Plus() && age < 18) continue;
+
+                    boolean alreadyAssigned = assignmentRepository.existsByHelperIdAndEventDayAndEventId(
+                            helper.getId(), String.valueOf(dayNumber), eventId);
+                    if (alreadyAssigned) continue;
+
+                    saveAssignment(eventId, dayNumber, helper.getId(), station.getId(), currentUserId);
                     assigned++;
                     iterator.remove();
                 }
@@ -104,12 +114,13 @@ public class AutoAssignmentService {
         }
     }
 
-    private void saveAssignment(String eventId, int dayNumber, String helperId, String stationId) {
+    private void saveAssignment(String eventId, int dayNumber, String helperId, String stationId, String userId) {
         Assignment assignment = new Assignment();
         assignment.setEventId(eventId);
-        assignment.setEventDay(String.valueOf(dayNumber));  // as String
+        assignment.setEventDay(String.valueOf(dayNumber));
         assignment.setHelperId(helperId);
         assignment.setStationId(stationId);
+        assignment.setUserId(userId);
         assignmentRepository.save(assignment);
     }
 }
