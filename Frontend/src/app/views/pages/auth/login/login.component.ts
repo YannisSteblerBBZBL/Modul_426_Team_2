@@ -5,16 +5,15 @@ import { AuthService } from '../../../../services/auth/auth.service';
 import { FormsModule } from '@angular/forms';
 
 @Component({
-  selector: 'app-login',
-  standalone: true,
-  imports: [
-    NgStyle,
-    RouterLink,
-    FormsModule,
-    NgIf
-  ],
-  templateUrl: './login.component.html',
-  styleUrl: './login.component.scss'
+    selector: 'app-login',
+    imports: [
+        NgStyle,
+        RouterLink,
+        FormsModule,
+        NgIf
+    ],
+    templateUrl: './login.component.html',
+    styleUrl: './login.component.scss'
 })
 export class LoginComponent implements OnInit {
 

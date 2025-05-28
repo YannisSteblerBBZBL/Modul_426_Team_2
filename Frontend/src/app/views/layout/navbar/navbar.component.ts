@@ -6,13 +6,12 @@ import { AuthService } from '../../../services/auth/auth.service';
 import { UserService } from '../../../services/user.service';
 
 @Component({
-  selector: 'app-navbar',
-  standalone: true,
-  imports: [
-    NgbDropdownModule
-  ],
-  templateUrl: './navbar.component.html',
-  styleUrl: './navbar.component.scss'
+    selector: 'app-navbar',
+    imports: [
+        NgbDropdownModule
+    ],
+    templateUrl: './navbar.component.html',
+    styleUrl: './navbar.component.scss'
 })
 export class NavbarComponent implements OnInit {
 

@@ -11,17 +11,16 @@ import { MenuItem } from './menu.model';
 import { FeatherIconDirective } from '../../../core/feather-icon/feather-icon.directive';
 
 @Component({
-  selector: 'app-sidebar',
-  standalone: true,
-  imports: [
-    RouterLink, 
-    RouterLinkActive, 
-    NgScrollbar, 
-    NgClass, 
-    FeatherIconDirective, 
-  ],
-  templateUrl: './sidebar.component.html',
-  styleUrl: './sidebar.component.scss'
+    selector: 'app-sidebar',
+    imports: [
+        RouterLink,
+        RouterLinkActive,
+        NgScrollbar,
+        NgClass,
+        FeatherIconDirective,
+    ],
+    templateUrl: './sidebar.component.html',
+    styleUrl: './sidebar.component.scss'
 })
 export class SidebarComponent implements OnInit, AfterViewInit {
 

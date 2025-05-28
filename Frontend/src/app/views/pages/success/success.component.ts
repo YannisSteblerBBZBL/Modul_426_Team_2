@@ -3,11 +3,10 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 
 @Component({
-  selector: 'app-success',
-  standalone: true,
-  imports: [],
-  templateUrl: './success.component.html',
-  styleUrl: './success.component.scss',
+    selector: 'app-success',
+    imports: [],
+    templateUrl: './success.component.html',
+    styleUrl: './success.component.scss'
 })
 export class SuccessComponent implements OnInit {
   sessionId: string | null = null;

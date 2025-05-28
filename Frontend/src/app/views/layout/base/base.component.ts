@@ -5,16 +5,15 @@ import { SidebarComponent } from '../sidebar/sidebar.component';
 import { FooterComponent } from '../footer/footer.component';
 
 @Component({
-  selector: 'app-base',
-  standalone: true,
-  imports: [
-    RouterOutlet,
-    NavbarComponent,
-    SidebarComponent,
-    FooterComponent
-  ],
-  templateUrl: './base.component.html',
-  styleUrl: './base.component.scss'
+    selector: 'app-base',
+    imports: [
+        RouterOutlet,
+        NavbarComponent,
+        SidebarComponent,
+        FooterComponent
+    ],
+    templateUrl: './base.component.html',
+    styleUrl: './base.component.scss'
 })
 export class BaseComponent implements OnInit {
 
