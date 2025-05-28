@@ -18,6 +18,8 @@ public class Event {
     @Id
     private String id;
 
+    private String userId;
+
     @NonNull
     private String name;
 

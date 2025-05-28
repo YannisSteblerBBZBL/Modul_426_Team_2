@@ -6,12 +6,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.helperapp.app.models.Event;
 import com.helperapp.app.repositories.EventRepository;
+import com.helperapp.app.security.JwtHelper;
 
 @Service
 public class EventService {
@@ -19,24 +21,33 @@ public class EventService {
     @Autowired
     private EventRepository eventRepository;
 
+    @Autowired
+    private JwtHelper jwtHelper;
+
     public List<Event> getAllEvents() {
-        return eventRepository.findAll();
+        String currentUserId = jwtHelper.getUserIdFromToken();
+        return eventRepository.findAll().stream()
+                .filter(e -> e.getUserId().equals(currentUserId))
+                .collect(Collectors.toList());
     }
 
     public Optional<Event> getEventById(String id) {
-        return eventRepository.findById(id);
+        Optional<Event> event = eventRepository.findById(id);
+        String currentUserId = jwtHelper.getUserIdFromToken();
+        return event.filter(e -> e.getUserId().equals(currentUserId));
     }
 
     public Event createEvent(Event event) {
+        String currentUserId = jwtHelper.getUserIdFromToken();
+        event.setUserId(currentUserId); // Associate event with the user
+
         LocalDate start = event.getStartDate();
         LocalDate end = event.getEndDate();
 
-        // Validation: startDate must not be after endDate
         if (start.isAfter(end)) {
             throw new IllegalArgumentException("Start date must be before or equal to end date.");
         }
 
-        // Generate eventDays
         List<Map<LocalDate, Number>> days = new ArrayList<>();
         LocalDate current = start;
         int dayCounter = 1;
@@ -54,7 +65,9 @@ public class EventService {
     }
 
     public Optional<Event> updateEvent(String id, Event updatedEvent) {
-        return eventRepository.findById(id).map(event -> {
+        String currentUserId = jwtHelper.getUserIdFromToken();
+
+        return eventRepository.findById(id).filter(e -> e.getUserId().equals(currentUserId)).map(event -> {
             LocalDate start = updatedEvent.getStartDate();
             LocalDate end = updatedEvent.getEndDate();
 
@@ -62,7 +75,6 @@ public class EventService {
                 throw new IllegalArgumentException("Start date must be before or equal to end date.");
             }
 
-            // Rebuild eventDays
             List<Map<LocalDate, Number>> days = new ArrayList<>();
             LocalDate current = start;
             int dayCounter = 1;
@@ -85,7 +97,10 @@ public class EventService {
     }
 
     public boolean deleteEvent(String id) {
-        if (eventRepository.existsById(id)) {
+        String currentUserId = jwtHelper.getUserIdFromToken();
+        Optional<Event> event = eventRepository.findById(id);
+
+        if (event.isPresent() && event.get().getUserId().equals(currentUserId)) {
             eventRepository.deleteById(id);
             return true;
         }
@@ -93,9 +108,13 @@ public class EventService {
     }
 
     public Optional<Event> updateEventDays(String id, List<Map<LocalDate, Number>> newEventDays) {
-    return eventRepository.findById(id).map(event -> {
-        event.setEventDays(newEventDays);
-        return eventRepository.save(event);
-    });
-}
+        String currentUserId = jwtHelper.getUserIdFromToken();
+
+        return eventRepository.findById(id)
+                .filter(e -> e.getUserId().equals(currentUserId))
+                .map(event -> {
+                    event.setEventDays(newEventDays);
+                    return eventRepository.save(event);
+                });
+    }
 }
