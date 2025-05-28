@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "helperApp-Frontend": {
+    "demo1": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -17,37 +17,45 @@
         "build": {
           "builder": "@angular-devkit/build-angular:application",
           "options": {
-            "outputPath": "dist/helper-app-frontend",
+            "outputPath": "dist",
+            "allowedCommonJsDependencies": [
+              "feather-icons",
+              "sweetalert2",
+              "apexcharts",
+              "quill-delta",
+              "dropzone"
+            ],
             "index": "src/index.html",
             "browser": "src/main.ts",
             "polyfills": [
-              "zone.js"
+              "zone.js",
+              "@angular/localize/init"
             ],
             "tsConfig": "tsconfig.app.json",
             "inlineStyleLanguage": "scss",
             "assets": [
-              {
-                "glob": "**/*",
-                "input": "public"
-              }
+              "src/assets",
+              "src/favicon.ico"
             ],
             "styles": [
               "src/styles.scss"
             ],
-            "scripts": []
+            "scripts": [
+              "node_modules/apexcharts/dist/apexcharts.min.js"
+            ]
           },
           "configurations": {
             "production": {
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "500kB",
-                  "maximumError": "1MB"
+                  "maximumWarning": "2MB",
+                  "maximumError": "3MB"
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "4kB",
-                  "maximumError": "8kB"
+                  "maximumWarning": "2kB",
+                  "maximumError": "4kB"
                 }
               ],
               "outputHashing": "all"
@@ -62,12 +70,17 @@
         },
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
+          "options": {
+            "allowedHosts": ["*.web-boxx.com"]
+          },
           "configurations": {
             "production": {
-              "buildTarget": "helperApp-Frontend:build:production"
+              "buildTarget": "demo1:build:production",
+              "allowedHosts": ["*.web-boxx.com"]
             },
             "development": {
-              "buildTarget": "helperApp-Frontend:build:development"
+              "buildTarget": "demo1:build:development",
+              "allowedHosts": ["*.web-boxx.com"]
             }
           },
           "defaultConfiguration": "development"
@@ -80,7 +93,8 @@
           "options": {
             "polyfills": [
               "zone.js",
-              "zone.js/testing"
+              "zone.js/testing",
+              "@angular/localize/init"
             ],
             "tsConfig": "tsconfig.spec.json",
             "inlineStyleLanguage": "scss",
@@ -100,6 +114,6 @@
     }
   },
   "cli": {
-    "analytics": "6b5bd0fd-3b5c-492b-9af2-c3e2c8647cf3"
+    "analytics": false
   }
 }
