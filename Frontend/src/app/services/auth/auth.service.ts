@@ -13,18 +13,6 @@ export class AuthService {
   constructor(private http: HttpClient, private router: Router) {}
 
   login(identifier: string, password: string): Observable<any> {
-    // Allow admin/admin123 to login without backend call
-    if (identifier === 'admin' && password === 'admin123') {
-      // Simulate a successful login response with a fake token
-      return new Observable(observer => {
-        observer.next({
-          accessToken: 'fake-jwt-token-for-admin',
-          user: { username: 'admin', role: 'admin' }
-        });
-        observer.complete();
-      });
-    }
-
     return this.http.post(
       `${this.baseUrl}/login`,
       { identifier, password },
