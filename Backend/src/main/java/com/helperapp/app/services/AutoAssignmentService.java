@@ -1,11 +1,8 @@
 package com.helperapp.app.services;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -41,77 +38,95 @@ public class AutoAssignmentService {
     public void generateAssignments(String eventId) {
         String currentUserId = jwtHelper.getUserIdFromToken();
 
+        // Fetch event and validate ownership
         Event event = eventRepository.findById(eventId)
             .filter(e -> e.getUserId().equals(currentUserId))
             .orElseThrow(() -> new SecurityException("Access denied: You don't own this event."));
 
-        List<Helper> helpers = helperRepository.findAll().stream()
+        // Fetch all required data upfront
+        List<Helper> allHelpers = helperRepository.findAll().stream()
             .filter(h -> h.getUserId().equals(currentUserId))
             .toList();
 
-        List<Station> stations = stationRepository.findAll().stream()
+        List<Station> allStations = stationRepository.findAll().stream()
             .filter(s -> s.getUserId().equals(currentUserId))
             .toList();
 
-        // Mapping: dayNumber -> date
+        // Get existing assignments to avoid modifying them
+        List<Assignment> existingAssignments = assignmentRepository.findByEventId(eventId);
+        Map<String, Set<String>> existingAssignmentsByDay = existingAssignments.stream()
+            .collect(Collectors.groupingBy(Assignment::getEventDay,
+                    Collectors.mapping(Assignment::getHelperId, Collectors.toSet())));
+
+        // Create day number to date mapping
         Map<Integer, LocalDate> dayNumberToDateMap = new HashMap<>();
         for (Map<LocalDate, Number> dayEntry : event.getEventDays()) {
-            for (Map.Entry<LocalDate, Number> entry : dayEntry.entrySet()) {
-                int dayNumber = entry.getValue().intValue(); 
-                dayNumberToDateMap.put(dayNumber, entry.getKey());
-            }
+            dayEntry.forEach((date, dayNum) -> dayNumberToDateMap.put(dayNum.intValue(), date));
         }
 
+        // Process each day
         for (Map.Entry<Integer, LocalDate> eventDayEntry : dayNumberToDateMap.entrySet()) {
             int dayNumber = eventDayEntry.getKey();
+            String dayNumberStr = String.valueOf(dayNumber);
+            
+            // Get helpers already assigned for this day
+            Set<String> assignedHelperIds = existingAssignmentsByDay.getOrDefault(dayNumberStr, new HashSet<>());
 
-            List<Helper> availableHelpers = new ArrayList<>(helpers);
+            // Filter available helpers for this day
+            List<Helper> availableHelpers = allHelpers.stream()
+                .filter(h -> h.getPresence().contains(dayNumber))
+                .filter(h -> !assignedHelperIds.contains(h.getId()))
+                .collect(Collectors.toList());
 
-            for (Station station : stations) {
-                int needed = station.getNeededHelpers().intValue();
-                int assigned = 0;
+            // Process each station
+            for (Station station : allStations) {
+                int neededHelpers = station.getNeededHelpers().intValue();
+                int currentlyAssigned = (int) existingAssignments.stream()
+                    .filter(a -> a.getEventDay().equals(dayNumberStr))
+                    .filter(a -> a.getStationId().equals(station.getId()))
+                    .count();
 
-                // Preferred helpers
-                for (Iterator<Helper> iterator = availableHelpers.iterator(); iterator.hasNext();) {
-                    if (assigned >= needed) break;
-
-                    Helper helper = iterator.next();
-                    if (!helper.getPresence().contains(dayNumber)) continue;
-
-                    int age = Integer.parseInt(helper.getAge());
-                    if (station.getIs18Plus() && age < 18) continue;
-
-                    boolean alreadyAssigned = assignmentRepository.existsByHelperIdAndEventDayAndEventId(
-                            helper.getId(), String.valueOf(dayNumber), eventId);
-                    if (alreadyAssigned) continue;
-
-                    if (helper.getPreferences() != null && helper.getPreferences().contains(station.getName())) {
-                        saveAssignment(eventId, dayNumber, helper.getId(), station.getId(), currentUserId);
-                        assigned++;
-                        iterator.remove();
-                    }
+                if (currentlyAssigned >= neededHelpers) {
+                    continue; // Skip if station is already fully staffed
                 }
 
-                // Fallback: any available helper
-                for (Iterator<Helper> iterator = availableHelpers.iterator(); iterator.hasNext();) {
-                    if (assigned >= needed) break;
+                int remainingNeeded = neededHelpers - currentlyAssigned;
 
-                    Helper helper = iterator.next();
-                    if (!helper.getPresence().contains(dayNumber)) continue;
+                // First pass: Assign preferred helpers
+                List<Helper> preferredHelpers = availableHelpers.stream()
+                    .filter(h -> isHelperEligibleForStation(h, station))
+                    .filter(h -> h.getPreferences() != null && h.getPreferences().contains(station.getName()))
+                    .collect(Collectors.toList());
 
-                    int age = Integer.parseInt(helper.getAge());
-                    if (station.getIs18Plus() && age < 18) continue;
-
-                    boolean alreadyAssigned = assignmentRepository.existsByHelperIdAndEventDayAndEventId(
-                            helper.getId(), String.valueOf(dayNumber), eventId);
-                    if (alreadyAssigned) continue;
-
+                for (Helper helper : preferredHelpers) {
+                    if (remainingNeeded <= 0) break;
+                    
                     saveAssignment(eventId, dayNumber, helper.getId(), station.getId(), currentUserId);
-                    assigned++;
-                    iterator.remove();
+                    availableHelpers.remove(helper);
+                    remainingNeeded--;
+                }
+
+                // Second pass: Fill remaining spots with any eligible helper
+                if (remainingNeeded > 0) {
+                    List<Helper> eligibleHelpers = availableHelpers.stream()
+                        .filter(h -> isHelperEligibleForStation(h, station))
+                        .collect(Collectors.toList());
+
+                    for (Helper helper : eligibleHelpers) {
+                        if (remainingNeeded <= 0) break;
+
+                        saveAssignment(eventId, dayNumber, helper.getId(), station.getId(), currentUserId);
+                        availableHelpers.remove(helper);
+                        remainingNeeded--;
+                    }
                 }
             }
         }
+    }
+
+    private boolean isHelperEligibleForStation(Helper helper, Station station) {
+        int age = Integer.parseInt(helper.getAge());
+        return !station.getIs18Plus() || age >= 18;
     }
 
     private void saveAssignment(String eventId, int dayNumber, String helperId, String stationId, String userId) {

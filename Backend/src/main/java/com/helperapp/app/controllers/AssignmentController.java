@@ -54,4 +54,9 @@ public class AssignmentController {
             return ResponseEntity.notFound().build();
         }
     }
+
+    @GetMapping("/event/{eventId}")
+    public List<Assignment> getAssignmentsByEvent(@PathVariable String eventId) {
+        return assignmentService.getAssignmentsByEventId(eventId);
+    }
 }
