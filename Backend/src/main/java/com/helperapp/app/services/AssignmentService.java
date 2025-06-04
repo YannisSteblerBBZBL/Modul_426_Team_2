@@ -32,6 +32,20 @@ public class AssignmentService {
         return assignmentRepository.findAll().stream().filter(a -> a.getUserId().equals(currentUserId)).collect(Collectors.toList());
     }
 
+    public List<Assignment> getAssignmentsByEventId(String eventId) {
+        String currentUserId = jwtHelper.getUserIdFromToken();
+        
+        // First verify that the user owns this event
+        Event event = eventRepository.findById(eventId)
+            .filter(e -> e.getUserId().equals(currentUserId))
+            .orElseThrow(() -> new SecurityException("Access denied: You don't own this event."));
+            
+        // Then return all assignments for this event
+        return assignmentRepository.findAll().stream()
+            .filter(a -> a.getEventId().equals(eventId))
+            .collect(Collectors.toList());
+    }
+
     public Optional<Assignment> getAssignmentById(String id) {
         Optional<Assignment> assignment = assignmentRepository.findById(id);
         String currentUserId = jwtHelper.getUserIdFromToken();

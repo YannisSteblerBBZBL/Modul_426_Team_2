@@ -1,5 +1,7 @@
 // Button mixins
 
+@use "sass:color";
+
 @mixin social-button($color) {
   background: $color;
   color: $white;
@@ -54,5 +56,20 @@ color: $color;
   &:disabled {
     color: $color;
     background-color: transparent;
+  }
+}
+
+@mixin button-variant($color) {
+  background: $color;
+  border-color: $color;
+  &:hover,
+  &:focus,
+  &:active {
+    background: color.adjust($color, $lightness: -10%);
+    border-color: $color;
+  }
+  &.active {
+    background: color.adjust($color, $lightness: 10%);
+    border-color: $color;
   }
 }

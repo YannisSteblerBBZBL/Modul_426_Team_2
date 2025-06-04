@@ -2,26 +2,26 @@
 
 
 // Global icon font
-@import "assets/fonts/feather/style.css";
+@use "assets/fonts/feather/style.css" as *;
 
 
 // 3rd party plugins
-@import "highlight.js/styles/atom-one-light.css";
-@import 'ngx-owl-carousel-o/lib/styles/scss/owl.carousel';
-@import 'ngx-owl-carousel-o/lib/styles/scss/owl.theme.default';
-@import "animate.css/animate.min.css"; // used in ngx-owl-carousel-o
-@import "@ng-select/ng-select/themes/default.theme.css";
-@import "metismenujs/scss/metismenujs";
-@import "dropzone/dist/min/dropzone.min.css";
-@import "quill/dist/quill.snow.css";
-@import "@rg-software/angular-archwizard/styles/archwizard";
-@import "@siemens/ngx-datatable/index";
-@import "@siemens/ngx-datatable/themes/bootstrap";
-@import "@siemens/ngx-datatable/assets/icons";
+@use "highlight.js/styles/atom-one-light.css" as *;
+@use 'ngx-owl-carousel-o/lib/styles/scss/owl.carousel' as *;
+@use 'ngx-owl-carousel-o/lib/styles/scss/owl.theme.default' as *;
+@use "animate.css/animate.min.css" as *; // used in ngx-owl-carousel-o
+@use "@ng-select/ng-select/themes/default.theme.css" as *;
+@use "metismenujs/scss/metismenujs" as *;
+@use "dropzone/dist/min/dropzone.min.css" as *;
+@use "quill/dist/quill.snow.css" as *;
+@use "@rg-software/angular-archwizard/styles/archwizard" as *;
+@use "@siemens/ngx-datatable/index" as *;
+@use "@siemens/ngx-datatable/themes/bootstrap" as *;
+@use "@siemens/ngx-datatable/assets/icons" as *;
 
 
 // Web-Boxx styles for LTR layout
-@import "./styles/styles.scss";
+@use "./styles/styles.scss" as *;
 
 // Web-Boxx styles for RTL layout. Replace the above style with this CSS file to enable RTL styles
-// @import "./styles/rtl-css/styles.rtl.css";
+// @use "./styles/rtl-css/styles.rtl.css" as *;

@@ -73,12 +73,14 @@ export class NavbarComponent implements OnInit {
     const userId = this.authService.getUserIdFromToken();
     
     this.userService.getUserById(userId!)
-      .then((user: { username: string; email: string }) => {
-        this.username = user.username;
-        this.email = user.email;
-      })
-      .catch((error: any) => {
-        console.error('Error fetching user data:', error);
+      .subscribe({
+        next: (user: { username: string; email: string }) => {
+          this.username = user.username;
+          this.email = user.email;
+        },
+        error: (error: any) => {
+          console.error('Error fetching user data:', error);
+        }
       });
   }
 

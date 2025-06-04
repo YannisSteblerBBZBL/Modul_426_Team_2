@@ -1,3 +1,5 @@
+@use "sass:color";
+
 // Sidebar
 
 .sidebar {
@@ -150,13 +152,13 @@
         }
         &:hover {
           .nav-link {
-            color: $sidebar-nav-link-hover-color;
+            color: color.adjust($primary, $lightness: -50%);
             .link-title {
               margin-left: 31px;
             }
             .link-icon {
-              color: $sidebar-nav-link-hover-color;
-              fill: rgba($sidebar-nav-link-hover-color, .1);
+              color: color.adjust($primary, $lightness: -50%);
+              fill: rgba(color.adjust($primary, $lightness: -50%), .1);
             }
           }
         }
@@ -217,11 +219,11 @@
               margin-left: 0;
             }
             &:hover {
-              color: $sidebar-nav-link-hover-color;
+              color: color.adjust($primary, $lightness: -50%);
               margin-left: 3px;
               &::before {
-                border: 1px solid $sidebar-nav-link-hover-color;
-                background: $sidebar-nav-link-hover-color;       
+                border: 1px solid color.adjust($primary, $lightness: -50%);
+                background: color.adjust($primary, $lightness: -50%);       
               }
             }
           }
