@@ -16,7 +16,19 @@ export class StationService {
     return this.http.get<Station[]>(this.apiUrl);
   }
 
-  updateStationHelperRequirements(id: string, neededHelpers: number, is18Plus: boolean): Observable<Station> {
-    return this.http.put<Station>(`${this.apiUrl}/${id}/requirements`, { neededHelpers, is18Plus });
+  getStationById(id: string): Observable<Station> {
+    return this.http.get<Station>(`${this.apiUrl}/${id}`);
+  }
+
+  createStation(station: Station): Observable<Station> {
+    return this.http.post<Station>(this.apiUrl, station);
+  }
+
+  updateStation(id: string, station: Station): Observable<Station> {
+    return this.http.put<Station>(`${this.apiUrl}/${id}`, station);
+  }
+
+  deleteStation(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 }

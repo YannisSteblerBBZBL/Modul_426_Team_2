@@ -1,0 +1,114 @@
+<div class="container py-4" *ngIf="!loading">
+  <div class="row mb-3">
+    <div class="col-md-4">
+      <label>Event:</label>
+      <select
+        class="form-select"
+        (change)="onEventChange($event)"
+        [ngModel]="selectedEvent?.id"
+      >
+        <option *ngFor="let event of events" [value]="event.id">
+          {{ event.name }}
+        </option>
+      </select>
+    </div>
+
+    <div class="col-md-4" *ngIf="shouldShowDaySelector()">
+      <label>Event-Tag:</label>
+      <select
+        class="form-select"
+        (change)="onDayChange($event)"
+        [ngModel]="selectedDay?.date"
+      >
+        <option *ngFor="let day of displayDays" [value]="day.date">
+          {{ day.date }} (Tag {{ day.dayNumber }})
+        </option>
+      </select>
+    </div>
+
+    <div class="col-md-4 d-flex align-items-end">
+      <button
+        class="btn btn-primary w-100"
+        [disabled]="hasAssignments() || !selectedEvent"
+        (click)="generateAutomaticAssignments()"
+      >
+        Einsatzplan automatisch erstellen
+      </button>
+    </div>
+  </div>
+
+  <div class="row" *ngIf="selectedEvent && selectedDay">
+    <div cdkDropListGroup class="row">
+      <div class="col-md-3">
+        <h5>Nicht zugewiesen</h5>
+        <div
+          cdkDropList
+          #unassignedList="cdkDropList"
+          [cdkDropListData]="getUnassignedHelpers()"
+          class="border p-2 rounded bg-light"
+          (cdkDropListDropped)="drop($event)"
+          style="min-height: 400px;"
+        >
+          <div
+            *ngFor="let helper of getUnassignedHelpers()"
+            cdkDrag
+            [cdkDragData]="helper"
+            class="card mb-2 p-2 small"
+            [ngClass]="{ 'border-info': helper.preferences?.length }"
+          >
+            <strong>{{ helper.firstname }} {{ helper.lastname }}</strong
+            ><br />
+            <small>{{ helper.age }} Jahre</small>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-9">
+        <div class="row">
+          <div class="col-md-4 mb-3" *ngFor="let station of stations">
+            <div class="card border-{{ stationStatus(station.id!) }}">
+              <div class="card-header bg-light">
+                <strong>{{ station.name }}</strong>
+                <span *ngIf="station.is18Plus" class="badge bg-danger ms-2"
+                  >18+</span
+                >
+                <div class="small">
+                  {{ getHelpersForStation(station.id!).length }} von
+                  {{ station.neededHelpers }} besetzt
+                </div>
+              </div>
+              <div
+                cdkDropList
+                [id]="'station-' + station.id"
+                [cdkDropListData]="getHelpersForStation(station.id!)"
+                [cdkDropListConnectedTo]="['unassignedList']"
+                class="card-body min-vh-25"
+                (cdkDropListDropped)="drop($event, station.id)"
+              >
+                <div
+                  *ngFor="let helper of getHelpersForStation(station.id!)"
+                  cdkDrag
+                  [cdkDragData]="helper"
+                  class="card p-2 mb-2 small"
+                  [ngClass]="{
+                    'border-primary': helper.preferences?.includes(station.id!)
+                  }"
+                >
+                  {{ helper.firstname }} {{ helper.lastname }}
+                  <br />
+                  <small>{{ helper.age }} Jahre</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="d-flex justify-content-center align-items-center min-vh-50" *ngIf="loading">
+  <div class="spinner-border text-primary" role="status">
+    <span class="visually-hidden">Loading...</span>
+  </div>
+</div>

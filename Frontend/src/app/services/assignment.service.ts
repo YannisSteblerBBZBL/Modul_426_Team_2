@@ -9,14 +9,35 @@ import { Assignment } from '../models/assignment.interface';
 })
 export class AssignmentService {
   private apiUrl = `${environment.apiUrl}/assignments`;
+  private autoApiUrl = `${environment.apiUrl}/auto-assignments`;
 
   constructor(private http: HttpClient) { }
+
+  getAllAssignments(): Observable<Assignment[]> {
+    return this.http.get<Assignment[]>(this.apiUrl);
+  }
+
+  getAssignmentById(id: string): Observable<Assignment> {
+    return this.http.get<Assignment>(`${this.apiUrl}/${id}`);
+  }
+
+  createAssignment(assignment: Assignment): Observable<Assignment> {
+    return this.http.post<Assignment>(this.apiUrl, assignment);
+  }
+
+  updateAssignment(id: string, assignment: Assignment): Observable<Assignment> {
+    return this.http.put<Assignment>(`${this.apiUrl}/${id}`, assignment);
+  }
+
+  deleteAssignment(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  }
 
   getAssignmentsByEvent(eventId: string): Observable<Assignment[]> {
     return this.http.get<Assignment[]>(`${this.apiUrl}/event/${eventId}`);
   }
 
   generateAutomaticAssignments(eventId: string): Observable<Assignment[]> {
-    return this.http.post<Assignment[]>(`${this.apiUrl}/generate/${eventId}`, {});
+    return this.http.post<Assignment[]>(`${this.autoApiUrl}/${eventId}`, {});
   }
 }

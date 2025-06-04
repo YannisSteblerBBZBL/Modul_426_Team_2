@@ -20,11 +20,15 @@ export class HelperService {
     return this.http.get<Helper>(`${this.apiUrl}/${id}`);
   }
 
-  updateHelperPreferences(id: string, preferences: string[]): Observable<Helper> {
-    return this.http.put<Helper>(`${this.apiUrl}/${id}/preferences`, { preferences });
+  createHelper(helper: Helper): Observable<Helper> {
+    return this.http.post<Helper>(this.apiUrl, helper);
   }
 
-  updateHelperPresence(id: string, presence: number[]): Observable<Helper> {
-    return this.http.put<Helper>(`${this.apiUrl}/${id}/presence`, { presence });
+  updateHelper(id: string, helper: Helper): Observable<Helper> {
+    return this.http.put<Helper>(`${this.apiUrl}/${id}`, helper);
+  }
+
+  deleteHelper(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 }
