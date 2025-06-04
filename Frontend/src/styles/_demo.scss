@@ -1,5 +1,7 @@
 // Demo Styles 
 
+@use "sass:color";
+
 .main-content {
   color: var(--#{$prefix}body-color);
   font-size: 16px;
@@ -186,5 +188,15 @@
   .rtl & {
     right: auto;
     left: 35px;
+  }
+}
+
+.demo-wrapper {
+  .btn-icon {
+    color: color.adjust($primary, $lightness: -50%);
+  }
+  
+  .btn-icon-text {
+    color: color.adjust($primary, $lightness: -50%);
   }
 }
