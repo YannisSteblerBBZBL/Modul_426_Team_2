@@ -1,6 +1,7 @@
 // Demo Styles 
 
 @use "sass:color";
+@use "functions" as *;
 
 .main-content {
   color: var(--#{$prefix}body-color);
@@ -198,5 +199,15 @@
   
   .btn-icon-text {
     color: color.adjust($primary, $lightness: -50%);
+  }
+}
+
+.text-primary {
+  color: darken-color($primary, 50%);
+}
+
+.text-primary-hover {
+  &:hover {
+    color: darken-color($primary, 50%);
   }
 }

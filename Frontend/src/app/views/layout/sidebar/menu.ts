@@ -44,5 +44,5 @@ export const MENU: MenuItem[] = [
     label: 'Manage Stations',
     icon: 'activity',
     link: '/manage-stations'
-  },
+  }
 ];

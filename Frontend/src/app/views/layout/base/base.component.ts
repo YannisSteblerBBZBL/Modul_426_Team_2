@@ -1,36 +1,22 @@
-import { Component, inject, OnInit } from '@angular/core';
-import { RouteConfigLoadEnd, RouteConfigLoadStart, Router, RouterOutlet } from '@angular/router';
-import { NavbarComponent } from '../navbar/navbar.component';
+import { Component } from '@angular/core';
+import { RouterOutlet } from '@angular/router';
 import { SidebarComponent } from '../sidebar/sidebar.component';
-import { FooterComponent } from '../footer/footer.component';
+import { NavbarComponent } from '../navbar/navbar.component';
 
 @Component({
-    selector: 'app-base',
-    imports: [
-        RouterOutlet,
-        NavbarComponent,
-        SidebarComponent,
-        FooterComponent
-    ],
-    templateUrl: './base.component.html',
-    styleUrl: './base.component.scss'
+  selector: 'app-base',
+  standalone: true,
+  imports: [RouterOutlet, SidebarComponent, NavbarComponent],
+  template: `
+    <div class="main-wrapper">
+      <app-sidebar></app-sidebar>
+      <div class="page-wrapper">
+        <app-navbar></app-navbar>
+        <div class="page-content">
+          <router-outlet></router-outlet>
+        </div>
+      </div>
+    </div>
+  `
 })
-export class BaseComponent implements OnInit {
-
-  isLoading: boolean = false;
-  private router = inject(Router);
-
-  constructor() {}
-
-  ngOnInit(): void {
-    // Spinner for lazy loading modules/components
-    this.router.events.forEach((event) => { 
-      if (event instanceof RouteConfigLoadStart) {
-        this.isLoading = true;
-      } else if (event instanceof RouteConfigLoadEnd) {
-        this.isLoading = false;
-      }
-    });
-  }
-
-}
+export class BaseComponent {}

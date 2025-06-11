@@ -1,6 +1,7 @@
 import { DOCUMENT, NgClass } from '@angular/common';
 import { AfterViewInit, Component, ElementRef, Inject, OnInit, Renderer2, ViewChild } from '@angular/core';
-import { NavigationEnd, Router, RouterLink, RouterLinkActive } from '@angular/router';
+import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterModule } from '@angular/router';
+import { CommonModule } from '@angular/common';
 
 import { NgScrollbar } from 'ngx-scrollbar';
 import MetisMenu from 'metismenujs';
@@ -12,15 +13,10 @@ import { FeatherIconDirective } from '../../../core/feather-icon/feather-icon.di
 
 @Component({
     selector: 'app-sidebar',
-    imports: [
-        RouterLink,
-        RouterLinkActive,
-        NgScrollbar,
-        NgClass,
-        FeatherIconDirective,
-    ],
     templateUrl: './sidebar.component.html',
-    styleUrl: './sidebar.component.scss'
+    styleUrls: ['./sidebar.component.scss'],
+    standalone: true,
+    imports: [RouterModule, CommonModule, NgScrollbar, NgClass, FeatherIconDirective]
 })
 export class SidebarComponent implements OnInit, AfterViewInit {
 
@@ -73,33 +69,27 @@ export class SidebarComponent implements OnInit, AfterViewInit {
    * Toggle the sidebar when the hamburger button is clicked
    */
   toggleSidebar(e: Event) {
+    e.preventDefault();
+    document.body.classList.toggle('sidebar-open');
     this.sidebarToggler.nativeElement.classList.toggle('active');
-    if (window.matchMedia('(min-width: 992px)').matches) {
-      e.preventDefault();
-      this.document.body.classList.toggle('sidebar-folded');
-    } else if (window.matchMedia('(max-width: 991px)').matches) {
-      e.preventDefault();
-      this.document.body.classList.toggle('sidebar-open');
-    }
   }
-
 
   /**
    * Open the sidebar on hover when it is in a folded state
    */
   operSidebarFolded() {
-    if (this.document.body.classList.contains('sidebar-folded')){
-      this.document.body.classList.add("open-sidebar-folded");
+    if (this.document.body.classList.contains('sidebar-folded')) {
+      this.document.body.classList.remove('sidebar-folded');
+      this.document.body.classList.add('open-sidebar-folded');
     }
   }
-
 
   /**
    * Fold sidebar after mouse leave (in folded state)
    */
   closeSidebarFolded() {
-    if (this.document.body.classList.contains('sidebar-folded')){
-      this.document.body.classList.remove("open-sidebar-folded");
+    if (this.document.body.classList.contains('sidebar-folded')) {
+      this.document.body.classList.remove('open-sidebar-folded');
     }
   }
 
@@ -114,7 +104,6 @@ export class SidebarComponent implements OnInit, AfterViewInit {
     }
   }
 
-
   /**
    * Returns true or false depending on whether the given menu item has a child
    * @param item menuItem
@@ -123,7 +112,6 @@ export class SidebarComponent implements OnInit, AfterViewInit {
     return item.subItems !== undefined ? item.subItems.length > 0 : false;
   }
 
-
   /**
    * Reset the menus, then highlight the currently active menu item
    */
@@ -131,7 +119,6 @@ export class SidebarComponent implements OnInit, AfterViewInit {
     this.resetMenuItems();
     this.activateMenuItems();
   }
-
 
   /**
    * Resets the menus
@@ -178,7 +165,6 @@ export class SidebarComponent implements OnInit, AfterViewInit {
       }
     }
   };
-
 
   /**
    * Toggles the state of the menu items
@@ -236,6 +222,5 @@ export class SidebarComponent implements OnInit, AfterViewInit {
         }
     }
   };
-
 
 }

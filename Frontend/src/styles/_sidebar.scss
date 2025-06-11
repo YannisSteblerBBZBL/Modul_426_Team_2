@@ -1,4 +1,6 @@
 @use "sass:color";
+@use "functions" as *;
+@use "mixins/animation" as *;
 
 // Sidebar
 
@@ -48,6 +50,7 @@
       }
     }
     .sidebar-toggler {
+      @include hamburger-animation;
       cursor: pointer;
       width: 18px;
       span {
@@ -56,8 +59,6 @@
         border-radius: 3px;
         height: 2px;
         background: $secondary;
-        // -webkit-transition: all .3s;
-        // transition: all .3s;
         position: relative;
       }
       
@@ -83,7 +84,6 @@
       &:not(.active) span:nth-child(3) {
         animation: ease .2s hamburger-animation-bottom-2 forwards;
       }
-
     }
   }
   .sidebar-body {
@@ -152,13 +152,13 @@
         }
         &:hover {
           .nav-link {
-            color: color.adjust($primary, $lightness: -50%);
+            color: darken-color($primary, 50%);
             .link-title {
               margin-left: 31px;
             }
             .link-icon {
-              color: color.adjust($primary, $lightness: -50%);
-              fill: rgba(color.adjust($primary, $lightness: -50%), .1);
+              color: darken-color($primary, 50%);
+              fill: rgba(darken-color($primary, 50%), .1);
             }
           }
         }
@@ -219,11 +219,11 @@
               margin-left: 0;
             }
             &:hover {
-              color: color.adjust($primary, $lightness: -50%);
+              color: darken-color($primary, 50%);
               margin-left: 3px;
               &::before {
-                border: 1px solid color.adjust($primary, $lightness: -50%);
-                background: color.adjust($primary, $lightness: -50%);       
+                border: 1px solid darken-color($primary, 50%);
+                background: darken-color($primary, 50%);       
               }
             }
           }
