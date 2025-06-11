@@ -26,21 +26,19 @@ import { FormsModule } from '@angular/forms';
 })
 export class OperationPlanComponent implements OnInit {
   events: AppEvent[] = [];
-  selectedEvent?: AppEvent;
-  selectedDay?: EventDayDisplay;
+  selectedEvent: AppEvent | undefined;
+  selectedDay: EventDayDisplay | undefined;
   displayDays: EventDayDisplay[] = [];
-
+  assignments: Assignment[] = [];
   helpers: Helper[] = [];
   stations: Station[] = [];
-  assignments: Assignment[] = [];
-
   loading = false;
 
   constructor(
     private eventService: EventService,
-    private assignmentService: AssignmentService,
     private helperService: HelperService,
-    private stationService: StationService
+    private stationService: StationService,
+    private assignmentService: AssignmentService
   ) {}
 
   ngOnInit(): void {
@@ -161,10 +159,7 @@ export class OperationPlanComponent implements OnInit {
       .generateAutomaticAssignments(this.selectedEvent.id!)
       .subscribe({
         next: (assignments: Assignment[]) => {
-          this.assignments = assignments.filter(
-            (a) => a.eventDay === this.selectedDay?.date
-          );
-          this.loading = false;
+          this.loadAssignments(); // Reload all assignments instead of filtering
         },
         error: (error) => {
           console.error('Error generating assignments:', error);
@@ -324,5 +319,64 @@ export class OperationPlanComponent implements OnInit {
 
   shouldShowDaySelector(): boolean {
     return !!this.selectedEvent && this.displayDays.length > 1;
+  }
+
+  toggleHelperRegistration(): void {
+    if (!this.selectedEvent?.id) return;
+
+    const newStatus = !this.selectedEvent.helperRegistrationOpen;
+    this.loading = true;
+    
+    console.log('Toggling registration status:');
+    console.log('- Current status:', this.selectedEvent.helperRegistrationOpen);
+    console.log('- Setting new status to:', newStatus);
+
+    this.eventService.setHelperRegistrationStatus(this.selectedEvent.id, newStatus).subscribe({
+      next: (updatedEvent: AppEvent) => {
+        console.log('- Received updated event:', updatedEvent);
+        console.log('- Updated registration status:', updatedEvent.helperRegistrationOpen);
+
+        if (this.selectedEvent) {
+          // Aktualisiere den Status im lokalen Event-Objekt
+          this.selectedEvent = {
+            ...this.selectedEvent,
+            helperRegistrationOpen: updatedEvent.helperRegistrationOpen
+          };
+          
+          console.log('- Final event status:', this.selectedEvent.helperRegistrationOpen);
+          
+          // Zeige eine Erfolgsmeldung an basierend auf dem tatsächlichen neuen Status
+          const message = this.selectedEvent.helperRegistrationOpen 
+            ? 'Die Helfer-Registrierung wurde erfolgreich geöffnet. Sie können den Link jetzt kopieren und teilen.' 
+            : 'Die Helfer-Registrierung wurde geschlossen.';
+          alert(message);
+        }
+        this.loading = false;
+      },
+      error: (err: Error) => {
+        console.error('Error updating registration status:', err);
+        alert('Fehler beim Aktualisieren des Registrierungsstatus.');
+        this.loading = false;
+      }
+    });
+  }
+
+  getRegistrationUrl(): string {
+    if (!this.selectedEvent?.id) return '';
+    const baseUrl = window.location.origin;
+    return `${baseUrl}/register-helper/${this.selectedEvent.id}`;
+  }
+
+  copyRegistrationUrl(): void {
+    const url = this.getRegistrationUrl();
+    navigator.clipboard.writeText(url).then(
+      () => {
+        alert('Der Registrierungs-Link wurde in die Zwischenablage kopiert!');
+      },
+      (err) => {
+        console.error('Could not copy URL:', err);
+        alert('Fehler beim Kopieren des Links. Bitte versuchen Sie es erneut.');
+      }
+    );
   }
 }
