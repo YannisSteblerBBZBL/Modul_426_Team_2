@@ -1,7 +1,11 @@
 package com.helperapp.app.services;
 
 import java.time.LocalDate;
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -72,52 +76,76 @@ public class AutoAssignmentService {
             // Get helpers already assigned for this day
             Set<String> assignedHelperIds = existingAssignmentsByDay.getOrDefault(dayNumberStr, new HashSet<>());
 
-            // Filter available helpers for this day
+            // Get available helpers for this day
             List<Helper> availableHelpers = allHelpers.stream()
                 .filter(h -> h.getPresence().contains(dayNumber))
                 .filter(h -> !assignedHelperIds.contains(h.getId()))
                 .collect(Collectors.toList());
 
-            // Process each station
+            // Calculate remaining needs for each station
+            Map<String, Integer> remainingNeeds = new HashMap<>();
             for (Station station : allStations) {
-                int neededHelpers = station.getNeededHelpers().intValue();
                 int currentlyAssigned = (int) existingAssignments.stream()
                     .filter(a -> a.getEventDay().equals(dayNumberStr))
                     .filter(a -> a.getStationId().equals(station.getId()))
                     .count();
-
-                if (currentlyAssigned >= neededHelpers) {
-                    continue; // Skip if station is already fully staffed
+                int needed = station.getNeededHelpers().intValue() - currentlyAssigned;
+                if (needed > 0) {
+                    remainingNeeds.put(station.getId(), needed);
                 }
+            }
 
-                int remainingNeeded = neededHelpers - currentlyAssigned;
+            // First pass: Assign helpers to their preferred stations
+            Set<String> assignedHelpers = new HashSet<>();
+            for (Helper helper : availableHelpers) {
+                if (helper.getPreferencedStations() != null && !helper.getPreferencedStations().isEmpty()) {
+                    for (String preferredStationId : helper.getPreferencedStations()) {
+                        if (remainingNeeds.containsKey(preferredStationId)) {
+                            Station station = allStations.stream()
+                                .filter(s -> s.getId().equals(preferredStationId))
+                                .findFirst()
+                                .orElse(null);
 
-                // First pass: Assign preferred helpers
-                List<Helper> preferredHelpers = availableHelpers.stream()
-                    .filter(h -> isHelperEligibleForStation(h, station))
-                    .filter(h -> h.getPreferences() != null && h.getPreferences().contains(station.getName()))
-                    .collect(Collectors.toList());
-
-                for (Helper helper : preferredHelpers) {
-                    if (remainingNeeded <= 0) break;
-                    
-                    saveAssignment(eventId, dayNumber, helper.getId(), station.getId(), currentUserId);
-                    availableHelpers.remove(helper);
-                    remainingNeeded--;
+                            if (station != null && isHelperEligibleForStation(helper, station)) {
+                                // Assign helper to their preferred station
+                                saveAssignment(eventId, dayNumber, helper.getId(), preferredStationId, currentUserId);
+                                assignedHelpers.add(helper.getId());
+                                int remaining = remainingNeeds.get(preferredStationId) - 1;
+                                if (remaining <= 0) {
+                                    remainingNeeds.remove(preferredStationId);
+                                } else {
+                                    remainingNeeds.put(preferredStationId, remaining);
+                                }
+                                break; // Helper is assigned, move to next helper
+                            }
+                        }
+                    }
                 }
+            }
 
-                // Second pass: Fill remaining spots with any eligible helper
-                if (remainingNeeded > 0) {
-                    List<Helper> eligibleHelpers = availableHelpers.stream()
-                        .filter(h -> isHelperEligibleForStation(h, station))
-                        .collect(Collectors.toList());
+            // Second pass: Fill remaining positions with unassigned helpers
+            List<Helper> remainingHelpers = availableHelpers.stream()
+                .filter(h -> !assignedHelpers.contains(h.getId()))
+                .collect(Collectors.toList());
 
-                    for (Helper helper : eligibleHelpers) {
-                        if (remainingNeeded <= 0) break;
+            for (Helper helper : remainingHelpers) {
+                for (Map.Entry<String, Integer> need : new HashMap<>(remainingNeeds).entrySet()) {
+                    String stationId = need.getKey();
+                    Station station = allStations.stream()
+                        .filter(s -> s.getId().equals(stationId))
+                        .findFirst()
+                        .orElse(null);
 
-                        saveAssignment(eventId, dayNumber, helper.getId(), station.getId(), currentUserId);
-                        availableHelpers.remove(helper);
-                        remainingNeeded--;
+                    if (station != null && isHelperEligibleForStation(helper, station)) {
+                        // Assign helper to an available station
+                        saveAssignment(eventId, dayNumber, helper.getId(), stationId, currentUserId);
+                        int remaining = remainingNeeds.get(stationId) - 1;
+                        if (remaining <= 0) {
+                            remainingNeeds.remove(stationId);
+                        } else {
+                            remainingNeeds.put(stationId, remaining);
+                        }
+                        break; // Helper is assigned, move to next helper
                     }
                 }
             }

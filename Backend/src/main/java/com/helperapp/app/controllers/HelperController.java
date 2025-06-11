@@ -1,6 +1,7 @@
 package com.helperapp.app.controllers;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -30,9 +31,8 @@ public class HelperController {
 
     @GetMapping("/{id}")
     public ResponseEntity<Helper> getHelperById(@PathVariable String id) {
-        return helperService.getHelperById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        Optional<Helper> helper = helperService.getHelperById(id);
+        return helper.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @PostMapping
@@ -40,17 +40,25 @@ public class HelperController {
         return helperService.createHelper(helper);
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<Helper> updateHelper(@PathVariable String id, @RequestBody Helper helper) {
-        return helperService.updateHelper(id, helper)
+    @PostMapping("/public/{eventId}")
+    public ResponseEntity<Helper> createPublicHelper(@PathVariable String eventId, @RequestBody Helper helper) {
+        return helperService.createPublicHelper(eventId, helper)
                 .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+                .orElse(ResponseEntity.badRequest().build());
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Helper> updateHelper(@PathVariable String id, @RequestBody Helper helperDetails) {
+        Optional<Helper> updatedHelper = helperService.updateHelper(id, helperDetails);
+        return updatedHelper.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteHelper(@PathVariable String id) {
-        return helperService.deleteHelper(id)
-                ? ResponseEntity.noContent().build()
-                : ResponseEntity.notFound().build();
+        if (helperService.deleteHelper(id)) {
+            return ResponseEntity.noContent().build();
+        } else {
+            return ResponseEntity.notFound().build();
+        }
     }
 }

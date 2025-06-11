@@ -59,8 +59,21 @@ public class EventController {
 
     @PutMapping("/eventDays/{id}")
     public ResponseEntity<Event> updateEventDays(@PathVariable String id, @RequestBody List<Map<LocalDate, Number>> newEventDays) {
-
         Optional<Event> updatedEvent = eventService.updateEventDays(id, newEventDays);
         return updatedEvent.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @PutMapping("/{id}/registration/{status}")
+    public ResponseEntity<Event> setHelperRegistrationStatus(@PathVariable String id, @PathVariable boolean status) {
+        return eventService.setHelperRegistrationStatus(id, status)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/{id}/registration-status")
+    public ResponseEntity<Boolean> getHelperRegistrationStatus(@PathVariable String id) {
+        return eventService.getHelperRegistrationStatus(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 }
