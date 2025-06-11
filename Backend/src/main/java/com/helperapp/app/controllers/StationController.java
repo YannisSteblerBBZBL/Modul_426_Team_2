@@ -53,4 +53,9 @@ public class StationController {
                 ? ResponseEntity.noContent().build()
                 : ResponseEntity.notFound().build();
     }
+
+    @GetMapping("/event/{eventId}")
+    public List<Station> getStationsByEvent(@PathVariable String eventId) {
+        return stationService.getStationsByEventId(eventId);
+    }
 }

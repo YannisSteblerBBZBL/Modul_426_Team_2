@@ -7,7 +7,9 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.helperapp.app.models.Event;
 import com.helperapp.app.models.Station;
+import com.helperapp.app.repositories.EventRepository;
 import com.helperapp.app.repositories.StationRepository;
 import com.helperapp.app.security.JwtHelper;
 
@@ -19,6 +21,9 @@ public class StationService {
 
     @Autowired
     private JwtHelper jwtHelper;
+
+    @Autowired
+    private EventRepository eventRepository;
 
     public List<Station> getAllStations() {
         String currentUserId = jwtHelper.getUserIdFromToken();
@@ -59,5 +64,16 @@ public class StationService {
             return true;
         }
         return false;
+    }
+
+    public List<Station> getStationsByEventId(String eventId) {
+        // Get the event to find its userId
+        Optional<Event> event = eventRepository.findById(eventId);
+        if (event.isEmpty()) {
+            return List.of(); // Return empty list if event not found
+        }
+
+        // Get all stations for this event's user
+        return stationRepository.findByUserId(event.get().getUserId());
     }
 }

@@ -32,4 +32,6 @@ public class Event {
     private LocalDate endDate;
 
     private List<Map<LocalDate, Number>> eventDays; // List of total event days (i.g. if 3 then: 21.05.2025, 1 | 22.05.2025, 2 | 23.05.2025, 3)
+
+    private boolean isHelperRegistrationOpen = false; // Controls if public helper registration is allowed
 }
