@@ -24,6 +24,10 @@ export class HelperService {
     return this.http.post<Helper>(this.apiUrl, helper);
   }
 
+  createPublicHelper(eventId: string, helper: Helper): Observable<Helper> {
+    return this.http.post<Helper>(`${this.apiUrl}/public/${eventId}`, helper);
+  }
+
   updateHelper(id: string, helper: Helper): Observable<Helper> {
     return this.http.put<Helper>(`${this.apiUrl}/${id}`, helper);
   }
