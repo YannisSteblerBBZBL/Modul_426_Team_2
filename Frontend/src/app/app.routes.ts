@@ -1,6 +1,8 @@
 import { Routes } from '@angular/router';
 import { BaseComponent } from './views/layout/base/base.component';
 import { authGuard } from './services/auth/auth.guard';
+import { PublicHelperRegistrationComponent } from './views/pages/public-helper-registration/public-helper-registration.component';
+import { RegistrationSuccessComponent } from './views/pages/registration-success/registration-success.component';
 
 export const routes: Routes = [
   {
@@ -30,6 +32,10 @@ export const routes: Routes = [
         path: 'operations',
         loadComponent: () => import('./views/pages/operation-plan/operation-plan.component').then(c => c.OperationPlanComponent),
       },
+      {
+        path: 'manage-helpers',
+        loadComponent: () => import('./views/pages/helper-managment/helper-managment.component').then(c => c.HelperManagmentComponent),
+      }
     ]
   },
   {
@@ -39,5 +45,13 @@ export const routes: Routes = [
   {
     path: 'error/:type',
     loadComponent: () => import('./views/pages/error/error.component').then(c => c.ErrorComponent)
+  },
+  { 
+    path: 'register-helper/:eventId', 
+    component: PublicHelperRegistrationComponent 
+  },
+  {
+    path: 'registration-success',
+    component: RegistrationSuccessComponent
   }
 ];
