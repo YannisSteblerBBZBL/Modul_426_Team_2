@@ -1,0 +1,105 @@
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h4 class="page-title">Manage Events</h4>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-12 col-md-6 col-lg-4" *ngFor="let event of events">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
+                        <div *ngIf="!editingEvent[event.id ?? '']">{{event.name}}</div>
+                        <input *ngIf="editingEvent[event.id ?? '']" 
+                               type="text" 
+                               class="form-control"
+                               [(ngModel)]="tempEventData[event.id ?? ''].name"
+                               placeholder="Event Name">
+                    </h5>
+                    <div class="badge" [ngClass]="{
+                        'bg-success': event.status === 'active',
+                        'bg-danger': event.status === 'cancelled',
+                        'bg-info': event.status === 'completed'
+                    }">
+                        {{event.status}}
+                    </div>
+                </div>
+
+                <div class="card-body">
+                    <!-- Description -->
+                    <div class="form-group mb-3">
+                        <label class="form-label">Description</label>
+                        <div *ngIf="!editingEvent[event.id ?? '']">{{event.description}}</div>
+                        <input *ngIf="editingEvent[event.id ?? '']"
+                               type="text"
+                               class="form-control"
+                               [(ngModel)]="tempEventData[event.id ?? ''].description"
+                               placeholder="Event Description">
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label class="form-label">Start Date</label>
+                        <div *ngIf="!editingEvent[event.id ?? '']">{{event.startDate | date:'medium'}}</div>
+                        <input *ngIf="editingEvent[event.id ?? '']"
+                               type="datetime-local"
+                               class="form-control"
+                               [(ngModel)]="tempEventData[event.id ?? ''].startDate">
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label class="form-label">End Date</label>
+                        <div *ngIf="!editingEvent[event.id ?? '']">{{event.endDate | date:'medium'}}</div>
+                        <input *ngIf="editingEvent[event.id ?? '']"
+                               type="datetime-local"
+                               class="form-control"
+                               [(ngModel)]="tempEventData[event.id ?? ''].endDate">
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label class="form-label">Status</label>
+                        <div *ngIf="!editingEvent[event.id ?? '']" 
+                             [class]="'badge bg-' + (event.status === 'active' ? 'success' : 
+                                                   event.status === 'cancelled' ? 'danger' : 'secondary')">
+                            {{event.status}}
+                        </div>
+                        <select *ngIf="editingEvent[event.id ?? '']"
+                                class="form-control"
+                                [(ngModel)]="tempEventData[event.id ?? ''].status">
+                            <option value="active">Active</option>
+                            <option value="cancelled">Cancelled</option>
+                            <option value="completed">Completed</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="card-footer">
+                    <div class="d-flex justify-content-between">
+                        <div class="btn-group">
+                            <button *ngIf="!editingEvent[event.id ?? '']" 
+                                    class="btn btn-sm btn-primary"
+                                    (click)="startEditing(event)">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                            <button *ngIf="editingEvent[event.id ?? '']" 
+                                    class="btn btn-sm btn-success"
+                                    (click)="saveEvent(event)">
+                                <i class="fas fa-save"></i> Save
+                            </button>
+                            <button *ngIf="editingEvent[event.id ?? '']" 
+                                    class="btn btn-sm btn-secondary"
+                                    (click)="cancelEditing(event)">
+                                <i class="fas fa-times"></i> Cancel
+                            </button>
+                        </div>
+                        <button class="btn btn-sm btn-danger" 
+                                [disabled]="event.hasActiveData"
+                                (click)="deleteEvent(event)">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> 

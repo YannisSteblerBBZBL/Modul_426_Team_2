@@ -1,0 +1,9 @@
+@use "mixins/animation" as *;
+
+.dropdown-menu {
+  &.show {
+    @include dropdownAnimation;
+  }
+  
+  // ... rest of the file remains unchanged ...
+} 
