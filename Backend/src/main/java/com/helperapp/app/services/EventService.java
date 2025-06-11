@@ -117,4 +117,21 @@ public class EventService {
                     return eventRepository.save(event);
                 });
     }
+
+    public Optional<Boolean> getHelperRegistrationStatus(String id) {
+        String currentUserId = jwtHelper.getUserIdFromToken();
+        return eventRepository.findById(id)
+                .filter(e -> e.getUserId().equals(currentUserId))
+                .map(Event::isHelperRegistrationOpen);
+    }
+
+    public Optional<Event> setHelperRegistrationStatus(String id, boolean status) {
+        String currentUserId = jwtHelper.getUserIdFromToken();
+        return eventRepository.findById(id)
+                .filter(e -> e.getUserId().equals(currentUserId))
+                .map(event -> {
+                    event.setHelperRegistrationOpen(status);
+                    return eventRepository.save(event);
+                });
+    }
 }
