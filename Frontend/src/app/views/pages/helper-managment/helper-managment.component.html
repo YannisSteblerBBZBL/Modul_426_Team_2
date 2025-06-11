@@ -1,0 +1,263 @@
+<div class="container-fluid p-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="m-0">Helfer Verwaltung</h2>
+    <button class="btn btn-primary d-flex align-items-center gap-2" (click)="showNewHelperForm = !showNewHelperForm">
+      <i class="feather icon-plus"></i>
+      <span>Neuer Helfer</span>
+    </button>
+  </div>
+
+  <!-- New Helper Form -->
+  <div class="card mb-4 new-helper-form" *ngIf="showNewHelperForm">
+    <div class="card-body">
+      <h5 class="card-title d-flex align-items-center gap-2">
+        <i class="feather icon-user-plus"></i>
+        Neuer Helfer
+      </h5>
+      <form (ngSubmit)="createHelper()" #newHelperForm="ngForm">
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Vorname</label>
+            <input type="text" class="form-control" [(ngModel)]="newHelper.firstname" name="firstname" required>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Nachname</label>
+            <input type="text" class="form-control" [(ngModel)]="newHelper.lastname" name="lastname" required>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">E-Mail</label>
+            <input type="email" class="form-control" [(ngModel)]="newHelper.email" name="email" required>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Geburtsdatum</label>
+            <input type="date" class="form-control" [(ngModel)]="newHelper.birthdate" name="birthdate" required
+                   (change)="onBirthdateChange(newHelper)">
+          </div>
+
+          <!-- Presence Days -->
+          <div class="col-12 preferences-section">
+            <h6 class="section-title">
+              <i class="feather icon-calendar me-2"></i>
+              Anwesenheitstage
+            </h6>
+            <div class="d-flex flex-wrap gap-3">
+              <div *ngFor="let day of availableDays" class="form-check">
+                <input type="checkbox" class="form-check-input" 
+                       [checked]="isPresent(newHelper, day)"
+                       (change)="togglePresence(newHelper, day)"
+                       [id]="'new-day-' + day">
+                <label class="form-check-label" [for]="'new-day-' + day">Tag {{day}}</label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Preferred Stations -->
+          <div class="col-12 preferences-section">
+            <h6 class="section-title">
+              <i class="feather icon-map-pin me-2"></i>
+              Bevorzugte Stationen
+            </h6>
+            <div class="d-flex flex-wrap gap-3">
+              <div *ngFor="let station of stations" class="form-check">
+                <input type="checkbox" class="form-check-input"
+                       [checked]="isStationPreferenced(newHelper, station.id!)"
+                       (change)="togglePreferencedStation(newHelper, station.id!)"
+                       [id]="'new-station-' + station.id">
+                <label class="form-check-label" [for]="'new-station-' + station.id">{{station.name}}</label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Preferred Helpers -->
+          <div class="col-12 preferences-section">
+            <h6 class="section-title">
+              <i class="feather icon-users me-2"></i>
+              Bevorzugte Helfer
+            </h6>
+            <div class="d-flex flex-wrap gap-3">
+              <div *ngFor="let helper of helpers" class="form-check">
+                <input type="checkbox" class="form-check-input"
+                       [checked]="isHelperPreferenced(newHelper, helper.id!)"
+                       (change)="togglePreferencedHelper(newHelper, helper.id!)"
+                       [id]="'new-helper-' + helper.id">
+                <label class="form-check-label" [for]="'new-helper-' + helper.id">
+                  {{helper.firstname}} {{helper.lastname}}
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="d-flex justify-content-end gap-2 mt-4">
+          <button type="button" class="btn btn-secondary" (click)="showNewHelperForm = false">Abbrechen</button>
+          <button type="submit" class="btn btn-primary" [disabled]="!newHelperForm.form.valid">Speichern</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Loading Spinner -->
+  <div class="text-center my-4" *ngIf="loading">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+  </div>
+
+  <!-- Helper Cards Grid -->
+  <div class="row g-4" *ngIf="!loading">
+    <div class="col-md-6 col-lg-4" *ngFor="let helper of helpers">
+      <!-- Helper Card -->
+      <div class="card">
+        <div class="card-body">
+          <!-- View Mode -->
+          <div *ngIf="editingHelper?.id !== helper.id">
+            <div class="d-flex justify-content-between align-items-start mb-4">
+              <h5 class="card-title m-0">{{helper.firstname}} {{helper.lastname}}</h5>
+              <div class="btn-group">
+                <button class="btn btn-sm btn-outline-primary" (click)="startEditing(helper)">
+                  <i class="feather icon-edit-2"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-danger" (click)="deleteHelper(helper)">
+                  <i class="feather icon-trash-2"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="helper-info">
+              <div class="info-item">
+                <i class="feather icon-mail"></i>
+                {{helper.email}}
+              </div>
+              <div class="info-item">
+                <i class="feather icon-calendar"></i>
+                {{helper.birthdate | date:'dd.MM.yyyy'}}
+              </div>
+              <div class="info-item">
+                <i class="feather icon-user"></i>
+                {{helper.age}} Jahre
+              </div>
+            </div>
+
+            <!-- Presence Days Display -->
+            <div class="mb-4">
+              <h6 class="card-subtitle">Anwesenheitstage</h6>
+              <div class="d-flex gap-1 flex-wrap mt-2">
+                <span *ngFor="let day of helper.presence" class="badge bg-primary">Tag {{day}}</span>
+                <span *ngIf="!helper.presence?.length" class="text-muted small">Keine Tage ausgewählt</span>
+              </div>
+            </div>
+
+            <!-- Preferred Stations Display -->
+            <div class="mb-4">
+              <h6 class="card-subtitle">Bevorzugte Stationen</h6>
+              <div class="d-flex gap-1 flex-wrap mt-2">
+                <span *ngFor="let stationId of helper.preferencedStations" class="badge bg-info">
+                  {{getStationName(stationId)}}
+                </span>
+                <span *ngIf="!helper.preferencedStations?.length" class="text-muted small">Keine Stationen ausgewählt</span>
+              </div>
+            </div>
+
+            <!-- Preferred Helpers Display -->
+            <div class="mb-4">
+              <h6 class="card-subtitle">Bevorzugte Helfer</h6>
+              <div class="d-flex gap-1 flex-wrap mt-2">
+                <span *ngFor="let helperId of helper.preferencedHelpers" class="badge bg-success">
+                  {{getHelperName(helperId)}}
+                </span>
+                <span *ngIf="!helper.preferencedHelpers?.length" class="text-muted small">Keine Helfer ausgewählt</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Edit Mode -->
+          <form *ngIf="editingHelper?.id === helper.id" (ngSubmit)="saveHelper(editingHelper!)">
+            <div class="mb-3">
+              <label class="form-label">Vorname</label>
+              <input type="text" class="form-control" [(ngModel)]="editingHelper!.firstname" name="firstname" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Nachname</label>
+              <input type="text" class="form-control" [(ngModel)]="editingHelper!.lastname" name="lastname" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">E-Mail</label>
+              <input type="email" class="form-control" [(ngModel)]="editingHelper!.email" name="email" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Geburtsdatum</label>
+              <input type="date" class="form-control" [(ngModel)]="editingHelper!.birthdate" name="birthdate" required
+                     (change)="onBirthdateChange(editingHelper!)">
+            </div>
+
+            <!-- Edit Presence Days -->
+            <div class="preferences-section">
+              <h6 class="section-title">
+                <i class="feather icon-calendar me-2"></i>
+                Anwesenheitstage
+              </h6>
+              <div class="d-flex flex-wrap gap-3">
+                <div *ngFor="let day of availableDays" class="form-check">
+                  <input type="checkbox" class="form-check-input"
+                         [checked]="isPresent(editingHelper!, day)"
+                         (change)="togglePresence(editingHelper!, day)"
+                         [id]="'edit-day-' + helper.id + '-' + day">
+                  <label class="form-check-label" [for]="'edit-day-' + helper.id + '-' + day">Tag {{day}}</label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Edit Preferred Stations -->
+            <div class="preferences-section">
+              <h6 class="section-title">
+                <i class="feather icon-map-pin me-2"></i>
+                Bevorzugte Stationen
+              </h6>
+              <div class="d-flex flex-wrap gap-3">
+                <div *ngFor="let station of stations" class="form-check">
+                  <input type="checkbox" class="form-check-input"
+                         [checked]="isStationPreferenced(editingHelper!, station.id!)"
+                         (change)="togglePreferencedStation(editingHelper!, station.id!)"
+                         [id]="'edit-station-' + helper.id + '-' + station.id">
+                  <label class="form-check-label" [for]="'edit-station-' + helper.id + '-' + station.id">
+                    {{station.name}}
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Edit Preferred Helpers -->
+            <div class="preferences-section">
+              <h6 class="section-title">
+                <i class="feather icon-users me-2"></i>
+                Bevorzugte Helfer
+              </h6>
+              <div class="d-flex flex-wrap gap-3">
+                <div *ngFor="let otherHelper of helpers" class="form-check">
+                  <input type="checkbox" class="form-check-input"
+                         *ngIf="otherHelper.id !== helper.id"
+                         [checked]="isHelperPreferenced(editingHelper!, otherHelper.id!)"
+                         (change)="togglePreferencedHelper(editingHelper!, otherHelper.id!)"
+                         [id]="'edit-helper-' + helper.id + '-' + otherHelper.id">
+                  <label class="form-check-label" [for]="'edit-helper-' + helper.id + '-' + otherHelper.id"
+                         *ngIf="otherHelper.id !== helper.id">
+                    {{otherHelper.firstname}} {{otherHelper.lastname}}
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div class="d-flex justify-content-end gap-2 mt-4">
+              <button type="button" class="btn btn-secondary" (click)="cancelEditing()">Abbrechen</button>
+              <button type="submit" class="btn btn-primary">Speichern</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- No Helpers Message -->
+  <div class="text-center my-4" *ngIf="!loading && helpers.length === 0">
+    <p class="text-muted">Keine Helfer vorhanden. Fügen Sie neue Helfer hinzu!</p>
+  </div>
+</div>

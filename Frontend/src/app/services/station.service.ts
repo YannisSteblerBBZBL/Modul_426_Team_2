@@ -20,6 +20,10 @@ export class StationService {
     return this.http.get<Station>(`${this.apiUrl}/${id}`);
   }
 
+  getStationsByEventId(eventId: string): Observable<Station[]> {
+    return this.http.get<Station[]>(`${this.apiUrl}/event/${eventId}`);
+  }
+
   createStation(station: Station): Observable<Station> {
     return this.http.post<Station>(this.apiUrl, station);
   }

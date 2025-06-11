@@ -37,6 +37,65 @@
     </div>
   </div>
 
+  <!-- Helper Registration Controls -->
+  <div class="row mb-4" *ngIf="selectedEvent">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Helfer-Registrierung</h5>
+          <div class="d-flex flex-column gap-3">
+            <!-- Debug Info -->
+            <div class="small text-muted mb-2">
+              Status: {{ selectedEvent.helperRegistrationOpen ? 'Offen' : 'Geschlossen' }}
+            </div>
+            
+            <!-- Status and Toggle Button -->
+            <div class="d-flex align-items-center gap-3">
+              <button
+                class="btn"
+                [class.btn-success]="!selectedEvent.helperRegistrationOpen"
+                [class.btn-danger]="selectedEvent.helperRegistrationOpen"
+                (click)="toggleHelperRegistration()"
+                [disabled]="loading"
+              >
+                <span *ngIf="loading" class="spinner-border spinner-border-sm me-2" role="status"></span>
+                {{ selectedEvent.helperRegistrationOpen ? 'Registrierung schließen' : 'Registrierung öffnen' }}
+              </button>
+              <span class="badge" [class.bg-success]="selectedEvent.helperRegistrationOpen" [class.bg-danger]="!selectedEvent.helperRegistrationOpen">
+                {{ selectedEvent.helperRegistrationOpen ? 'Registrierung ist geöffnet' : 'Registrierung ist geschlossen' }}
+              </span>
+            </div>
+
+            <!-- Registration URL -->
+            <div *ngIf="selectedEvent.helperRegistrationOpen" class="mt-3">
+              <label class="form-label">Registrierungs-Link:</label>
+              <div class="input-group">
+                <input
+                  type="text"
+                  class="form-control"
+                  [value]="getRegistrationUrl()"
+                  readonly
+                  #urlInput
+                >
+                <button
+                  class="btn btn-outline-primary"
+                  type="button"
+                  (click)="copyRegistrationUrl()"
+                  [disabled]="loading"
+                >
+                  <i class="bi bi-clipboard"></i> URL kopieren
+                </button>
+              </div>
+              <small class="text-muted mt-2 d-block">
+                Teilen Sie diesen Link mit potenziellen Helfern. Der Link ist nur aktiv, solange die Registrierung geöffnet ist.
+              </small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="row" *ngIf="selectedEvent && selectedDay">
     <div cdkDropListGroup class="row">
       <div class="col-md-3">

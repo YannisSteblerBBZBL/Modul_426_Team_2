@@ -5,6 +5,7 @@ export interface AppEvent {
     startDate: string;
     endDate: string;
     eventDays: { [key: string]: number }[];
+    helperRegistrationOpen: boolean;
 }
 
 // Interface for the transformed event day structure used in the frontend
