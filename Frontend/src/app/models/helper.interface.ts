@@ -5,6 +5,7 @@ export interface Helper {
     email: string;
     birthdate: string;
     age: string;
+    eventId?: string;
     presence: number[];
     preferences?: string[];
     preferencedHelpers?: string[];

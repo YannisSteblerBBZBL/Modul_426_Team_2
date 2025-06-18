@@ -13,7 +13,10 @@ export class StationService {
 
   constructor(private http: HttpClient) { }
 
-  getAllStations(): Observable<Station[]> {
+  getAllStations(eventId?: string): Observable<Station[]> {
+    if (eventId) {
+      return this.http.get<Station[]>(`${this.apiUrl}?eventId=${eventId}`);
+    }
     return this.http.get<Station[]>(this.apiUrl);
   }
 
@@ -22,7 +25,7 @@ export class StationService {
   }
 
   getStationsByEventId(eventId: string): Observable<Station[]> {
-    return this.http.get<Station[]>(`${this.apiUrl}/event/${eventId}`);
+    return this.getAllStations(eventId);
   }
 
   createStation(station: Station): Observable<Station> {

@@ -16,6 +16,8 @@ public class Station {
 
     private String userId;
 
+    private String eventId;
+
     @NonNull
     private String name;
 

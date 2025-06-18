@@ -16,6 +16,10 @@ export class HelperService {
     return this.http.get<Helper[]>(this.apiUrl);
   }
 
+  getHelpersByEventId(eventId: string): Observable<Helper[]> {
+    return this.http.get<Helper[]>(`${this.apiUrl}/event/${eventId}`);
+  }
+
   getHelperById(id: string): Observable<Helper> {
     return this.http.get<Helper>(`${this.apiUrl}/${id}`);
   }
