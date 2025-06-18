@@ -1,7 +1,45 @@
 <div class="container-fluid">
-    <div class="row mb-4">
-        <div class="col-12">
+    <div class="row mb-4 align-items-center">
+        <div class="col">
             <h4 class="page-title">Manage Events</h4>
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-primary" (click)="toggleNewEventForm()">
+                <i class="fas fa-plus"></i> + Add Event
+            </button>
+        </div>
+    </div>
+
+    <!-- New Event Form -->
+    <div class="row mb-4" *ngIf="showNewEventForm">
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="card h-100 border-primary">
+                <div class="card-header bg-primary text-white">
+                    <strong>New Event</strong>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">Name</label>
+                        <input type="text" class="form-control" [(ngModel)]="newEvent.name">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <input type="text" class="form-control" [(ngModel)]="newEvent.description">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Start Date</label>
+                        <input type="datetime-local" class="form-control" [(ngModel)]="newEvent.startDate">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">End Date</label>
+                        <input type="datetime-local" class="form-control" [(ngModel)]="newEvent.endDate">
+                    </div>
+                </div>
+                <div class="card-footer d-flex justify-content-end gap-2">
+                    <button class="btn btn-sm btn-success" (click)="createEvent()">Create</button>
+                    <button class="btn btn-sm btn-secondary" (click)="toggleNewEventForm()">Cancel</button>
+                </div>
+            </div>
         </div>
     </div>
 

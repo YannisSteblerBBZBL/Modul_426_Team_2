@@ -19,6 +19,9 @@ export class ManageEventsComponent implements OnInit {
     editingEvent: { [key: string]: boolean } = {};
     tempEventData: { [key: string]: Partial<Event> } = {};
 
+    showNewEventForm = false;
+    newEvent: Event = this.getEmptyEvent();
+
     constructor(private eventService: EventService) {}
 
     ngOnInit(): void {
@@ -28,7 +31,7 @@ export class ManageEventsComponent implements OnInit {
     loadEvents(): void {
         this.eventService.getAllEvents().subscribe({
             next: (events) => {
-                this.events = events;
+                this.events = events as unknown as Event[];
             },
             error: (error) => {
                 console.error('Error loading events:', error);
@@ -78,11 +81,16 @@ export class ManageEventsComponent implements OnInit {
             hasActiveData: this.tempEventData[eventId].hasActiveData ?? event.hasActiveData
         };
 
-        this.eventService.updateEvent(updatedEvent).subscribe({
+        if (new Date(updatedEvent.startDate) > new Date(updatedEvent.endDate)) {
+            alert('Start date must be before or equal to end date.');
+            return;
+        }
+
+        this.eventService.updateEvent(eventId, updatedEvent as any).subscribe({
             next: (response) => {
                 const index = this.events.findIndex(e => e.id === eventId);
                 if (index !== -1) {
-                    this.events[index] = response;
+                    this.events[index] = response as unknown as Event;
                 }
                 this.editingEvent[eventId] = false;
                 delete this.tempEventData[eventId];
@@ -142,6 +150,47 @@ export class ManageEventsComponent implements OnInit {
             title: 'Error',
             text: message,
             icon: 'error'
+        });
+    }
+
+    private getEmptyEvent(): Event {
+        return {
+            name: '',
+            description: '',
+            startDate: '',
+            endDate: '',
+            status: 'active',
+            hasActiveData: false
+        } as Event;
+    }
+
+    toggleNewEventForm(): void {
+        this.showNewEventForm = !this.showNewEventForm;
+        if (!this.showNewEventForm) {
+            this.newEvent = this.getEmptyEvent();
+        }
+    }
+
+    createEvent(): void {
+        if (!this.newEvent.name || !this.newEvent.startDate || !this.newEvent.endDate) {
+            alert('Please fill in name and dates.');
+            return;
+        }
+
+        if (new Date(this.newEvent.startDate) > new Date(this.newEvent.endDate)) {
+            alert('Start date must be before or equal to end date.');
+            return;
+        }
+
+        this.eventService.createEvent(this.newEvent as any).subscribe({
+            next: (created) => {
+                this.events.push(created as unknown as Event);
+                this.toggleNewEventForm();
+            },
+            error: (error) => {
+                console.error('Error creating event:', error);
+                alert('Error creating event');
+            }
         });
     }
 }
