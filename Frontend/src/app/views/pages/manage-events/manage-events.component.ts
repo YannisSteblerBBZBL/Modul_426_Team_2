@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Event } from '../../../models/event.interface';
+import { AppEvent } from '../../../models/appEvent.interface';
 import { EventService } from '../../../services/event.service';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { SweetAlert2Module } from '@sweetalert2/ngx-sweetalert2';
@@ -15,9 +15,9 @@ import Swal from 'sweetalert2';
     styleUrls: ['./manage-events.component.scss']
 })
 export class ManageEventsComponent implements OnInit {
-    events: Event[] = [];
+    events: AppEvent[] = [];
     editingEvent: { [key: string]: boolean } = {};
-    tempEventData: { [key: string]: Partial<Event> } = {};
+    tempEventData: { [key: string]: Partial<AppEvent> } = {};
 
     constructor(private eventService: EventService) {}
 
@@ -37,11 +37,11 @@ export class ManageEventsComponent implements OnInit {
         });
     }
 
-    getEventId(event: Event): string {
+    getEventId(event: AppEvent): string {
         return event.id ?? '';
     }
 
-    startEditing(event: Event): void {
+    startEditing(event: AppEvent): void {
         const eventId = this.getEventId(event);
         if (!eventId) return;
 
@@ -51,12 +51,13 @@ export class ManageEventsComponent implements OnInit {
             description: event.description,
             startDate: event.startDate,
             endDate: event.endDate,
-            status: event.status,
-            hasActiveData: event.hasActiveData
+            eventDays: event.eventDays,
+            helperRegistrationOpen: event.helperRegistrationOpen,
+            status: event.status
         };
     }
 
-    cancelEditing(event: Event): void {
+    cancelEditing(event: AppEvent): void {
         const eventId = this.getEventId(event);
         if (!eventId) return;
 
@@ -64,21 +65,22 @@ export class ManageEventsComponent implements OnInit {
         delete this.tempEventData[eventId];
     }
 
-    saveEvent(event: Event): void {
+    saveEvent(event: AppEvent): void {
         const eventId = this.getEventId(event);
         if (!eventId) return;
 
-        const updatedEvent = {
+        const updatedEvent: AppEvent = {
             id: eventId,
             name: this.tempEventData[eventId].name || event.name,
             description: this.tempEventData[eventId].description || event.description,
             startDate: this.tempEventData[eventId].startDate || event.startDate,
             endDate: this.tempEventData[eventId].endDate || event.endDate,
-            status: this.tempEventData[eventId].status || event.status,
-            hasActiveData: this.tempEventData[eventId].hasActiveData ?? event.hasActiveData
+            eventDays: this.tempEventData[eventId].eventDays || event.eventDays,
+            helperRegistrationOpen: this.tempEventData[eventId].helperRegistrationOpen ?? event.helperRegistrationOpen,
+            status: this.tempEventData[eventId].status || event.status
         };
 
-        this.eventService.updateEvent(updatedEvent).subscribe({
+        this.eventService.updateEvent(eventId, updatedEvent).subscribe({
             next: (response) => {
                 const index = this.events.findIndex(e => e.id === eventId);
                 if (index !== -1) {
@@ -95,14 +97,9 @@ export class ManageEventsComponent implements OnInit {
         });
     }
 
-    deleteEvent(event: Event): void {
+    deleteEvent(event: AppEvent): void {
         const eventId = this.getEventId(event);
         if (!eventId) return;
-
-        if (event.hasActiveData) {
-            this.showErrorAlert('Cannot delete event with active data');
-            return;
-        }
 
         Swal.fire({
             title: 'Are you sure?',

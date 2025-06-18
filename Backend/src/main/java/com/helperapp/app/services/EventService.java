@@ -60,6 +60,12 @@ public class EventService {
         }
 
         event.setEventDays(days);
+        
+        // Set default values for new properties
+        if (event.getStatus() == null) {
+            event.setStatus("active");
+        }
+        event.setHasActiveData(false);
 
         return eventRepository.save(event);
     }
@@ -91,6 +97,8 @@ public class EventService {
             event.setStartDate(start);
             event.setEndDate(end);
             event.setEventDays(days);
+            event.setStatus(updatedEvent.getStatus() != null ? updatedEvent.getStatus() : "active");
+            event.setHasActiveData(updatedEvent.isHasActiveData());
 
             return eventRepository.save(event);
         });
