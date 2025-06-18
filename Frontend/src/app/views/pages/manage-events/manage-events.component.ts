@@ -18,6 +18,18 @@ export class ManageEventsComponent implements OnInit {
     events: AppEvent[] = [];
     editingEvent: { [key: string]: boolean } = {};
     tempEventData: { [key: string]: Partial<AppEvent> } = {};
+    
+    // New event creation properties
+    showCreateForm = false;
+    newEvent: Partial<AppEvent> = {
+        name: '',
+        description: '',
+        startDate: '',
+        endDate: '',
+        eventDays: [],
+        helperRegistrationOpen: false,
+        status: 'active'
+    };
 
     constructor(private eventService: EventService) {}
 
@@ -35,6 +47,78 @@ export class ManageEventsComponent implements OnInit {
                 this.showErrorAlert('Error loading events');
             }
         });
+    }
+
+    // New event creation methods
+    showCreateEventForm(): void {
+        this.showCreateForm = true;
+        this.resetNewEventForm();
+    }
+
+    cancelCreateEvent(): void {
+        this.showCreateForm = false;
+        this.resetNewEventForm();
+    }
+
+    createEvent(): void {
+        if (!this.validateNewEvent()) {
+            return;
+        }
+
+        const eventToCreate: AppEvent = {
+            name: this.newEvent.name!,
+            description: this.newEvent.description || '',
+            startDate: this.newEvent.startDate!,
+            endDate: this.newEvent.endDate!,
+            eventDays: this.newEvent.eventDays || [],
+            helperRegistrationOpen: this.newEvent.helperRegistrationOpen || false,
+            status: this.newEvent.status || 'active'
+        };
+
+        this.eventService.createEvent(eventToCreate).subscribe({
+            next: (createdEvent) => {
+                this.events.push(createdEvent);
+                this.showCreateForm = false;
+                this.resetNewEventForm();
+                this.showSuccessAlert('Event created successfully');
+            },
+            error: (error) => {
+                console.error('Error creating event:', error);
+                this.showErrorAlert('Error creating event');
+            }
+        });
+    }
+
+    private validateNewEvent(): boolean {
+        if (!this.newEvent.name || this.newEvent.name.trim() === '') {
+            this.showErrorAlert('Event name is required');
+            return false;
+        }
+        if (!this.newEvent.startDate) {
+            this.showErrorAlert('Start date is required');
+            return false;
+        }
+        if (!this.newEvent.endDate) {
+            this.showErrorAlert('End date is required');
+            return false;
+        }
+        if (new Date(this.newEvent.startDate) >= new Date(this.newEvent.endDate)) {
+            this.showErrorAlert('End date must be after start date');
+            return false;
+        }
+        return true;
+    }
+
+    private resetNewEventForm(): void {
+        this.newEvent = {
+            name: '',
+            description: '',
+            startDate: '',
+            endDate: '',
+            eventDays: [],
+            helperRegistrationOpen: false,
+            status: 'active'
+        };
     }
 
     getEventId(event: AppEvent): string {

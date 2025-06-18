@@ -2,13 +2,11 @@ package com.helperapp.app.services;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.helperapp.app.models.Assignment;
-import com.helperapp.app.models.Event;
 import com.helperapp.app.models.Station;
 import com.helperapp.app.repositories.AssignmentRepository;
 import com.helperapp.app.repositories.EventRepository;
@@ -30,11 +28,13 @@ public class StationService {
     @Autowired
     private AssignmentRepository assignmentRepository;
 
-    public List<Station> getAllStations() {
+    public List<Station> getAllStations(String eventId) {
         String currentUserId = jwtHelper.getUserIdFromToken();
-        return stationRepository.findAll().stream()
-                .filter(station -> station.getUserId().equals(currentUserId))
-                .collect(Collectors.toList());
+        if (eventId != null && !eventId.isEmpty()) {
+            return stationRepository.findByUserIdAndEventId(currentUserId, eventId);
+        } else {
+            return stationRepository.findByUserId(currentUserId);
+        }
     }
 
     public Optional<Station> getStationById(String id) {
@@ -45,6 +45,9 @@ public class StationService {
 
     public Station createStation(Station station) {
         station.setUserId(jwtHelper.getUserIdFromToken());
+        if (station.getEventId() == null || station.getEventId().isEmpty()) {
+            throw new IllegalArgumentException("Station muss einem Event zugeordnet werden.");
+        }
         return stationRepository.save(station);
     }
 
@@ -100,14 +103,12 @@ public class StationService {
         return false;
     }
 
-    public List<Station> getStationsByEventId(String eventId) {
-        // Get the event to find its userId
-        Optional<Event> event = eventRepository.findById(eventId);
-        if (event.isEmpty()) {
-            return List.of(); // Return empty list if event not found
-        }
+    public List<Station> getStationsByUserIdAndEventId(String eventId) {
+        String currentUserId = jwtHelper.getUserIdFromToken();
+        return stationRepository.findByUserIdAndEventId(currentUserId, eventId);
+    }
 
-        // Get all stations for this event's user
-        return stationRepository.findByUserId(event.get().getUserId());
+    public List<Station> getStationsByEventId(String eventId) {
+        return stationRepository.findByEventId(eventId);
     }
 }

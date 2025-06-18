@@ -6,6 +6,8 @@ import { StationService } from '../../../services/station.service';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { SweetAlert2Module } from '@sweetalert2/ngx-sweetalert2';
 import Swal from 'sweetalert2';
+import { AppEvent } from '../../../models/appEvent.interface';
+import { EventService } from '../../../services/event.service';
 
 @Component({
   selector: 'app-manage-stations',
@@ -20,24 +22,35 @@ export class ManageStationsComponent implements OnInit {
   editingStation: Station | null = null;
   newStation: Station = this.getEmptyStation();
   showNewStationForm = false;
+  events: AppEvent[] = [];
+  selectedEventId: string | undefined;
 
-  constructor(private stationService: StationService) {}
+  constructor(private stationService: StationService, private eventService: EventService) {}
 
   ngOnInit(): void {
-    this.loadStations();
+    this.loadEvents();
   }
 
-  private getEmptyStation(): Station {
-    return {
-      name: '',
-      neededHelpers: 1,
-      is18Plus: false
-    };
+  loadEvents(): void {
+    this.eventService.getAllEvents().subscribe({
+      next: (events) => {
+        this.events = events;
+        if (events.length > 0) {
+          this.selectedEventId = events[0].id;
+        }
+        this.loadStations();
+      },
+      error: (error) => {
+        console.error('Error loading events:', error);
+        this.showErrorAlert('Fehler beim Laden der Events');
+      }
+    });
   }
 
   loadStations(): void {
+    if (!this.selectedEventId) return;
     this.loading = true;
-    this.stationService.getAllStations().subscribe({
+    this.stationService.getAllStations(this.selectedEventId).subscribe({
       next: (stations) => {
         this.stations = stations;
         this.loading = false;
@@ -48,6 +61,20 @@ export class ManageStationsComponent implements OnInit {
         this.loading = false;
       }
     });
+  }
+
+  onEventChange(): void {
+    this.loadStations();
+    this.newStation.eventId = this.selectedEventId;
+  }
+
+  private getEmptyStation(): Station {
+    return {
+      name: '',
+      neededHelpers: 1,
+      is18Plus: false,
+      eventId: this.selectedEventId
+    };
   }
 
   startEditing(station: Station): void {
@@ -194,6 +221,10 @@ export class ManageStationsComponent implements OnInit {
   }
 
   createStation(): void {
+    if (!this.newStation.eventId) {
+      alert('Bitte wählen Sie ein Event aus.');
+      return;
+    }
     this.stationService.createStation(this.newStation).subscribe({
       next: (createdStation) => {
         this.stations.push(createdStation);

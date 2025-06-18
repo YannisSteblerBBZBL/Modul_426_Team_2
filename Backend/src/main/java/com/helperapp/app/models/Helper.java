@@ -32,7 +32,9 @@ public class Helper {
 
     private String age;
 
-    private List<Number> presence; // List of presence EventDays (i.g. 1, 4, 5)
+    private String eventId;
+
+    private List<Number> presence; 
 
     private List<String> preferences;
 

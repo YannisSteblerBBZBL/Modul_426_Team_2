@@ -64,13 +64,9 @@ export class OperationPlanComponent implements OnInit {
     this.loading = true;
     forkJoin({
       events: this.eventService.getAllEvents(),
-      helpers: this.helperService.getAllHelpers(),
-      stations: this.stationService.getAllStations(),
     }).subscribe({
-      next: ({ events, helpers, stations }) => {
+      next: ({ events }) => {
         this.events = events;
-        this.helpers = helpers;
-        this.stations = stations;
 
         if (events.length > 0) {
           // Set initial event and its days
@@ -92,12 +88,31 @@ export class OperationPlanComponent implements OnInit {
       this.selectedEvent = event;
       this.displayDays = this.getEventDaysForDisplay(event.eventDays);
 
-      if (this.displayDays.length > 0) {
-        this.updateSelectedDay(this.displayDays[0]);
-      } else {
-        this.selectedDay = undefined;
-        this.assignments = [];
-      }
+      // Load event-specific helpers and stations
+      this.loading = true;
+      forkJoin({
+        helpers: this.helperService.getHelpersByEventId(eventId),
+        stations: this.stationService.getAllStations(eventId)
+      }).subscribe({
+        next: ({ helpers, stations }) => {
+          this.helpers = helpers;
+          this.stations = stations;
+          this.loading = false;
+          
+          if (this.displayDays.length > 0) {
+            this.updateSelectedDay(this.displayDays[0]);
+          } else {
+            this.selectedDay = undefined;
+            this.assignments = [];
+          }
+        },
+        error: (error) => {
+          console.error('Error loading helpers and stations for event:', error);
+          this.helpers = [];
+          this.stations = [];
+          this.loading = false;
+        }
+      });
     }
   }
 

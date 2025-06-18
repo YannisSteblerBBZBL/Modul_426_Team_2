@@ -1,10 +1,18 @@
 <div class="container-fluid p-4">
   <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="m-0">Station Verwaltung</h2>
+    <h2 class="m-0">Stationen verwalten</h2>
     <button class="btn btn-primary d-flex align-items-center gap-2" (click)="showNewStationForm = !showNewStationForm">
       <i class="feather icon-plus"></i>
       <span>Neue Station</span>
     </button>
+  </div>
+
+  <!-- Event Filter Dropdown -->
+  <div class="mb-4">
+    <label class="form-label">Event auswählen:</label>
+    <select class="form-select w-auto d-inline-block" [(ngModel)]="selectedEventId" (change)="onEventChange()">
+      <option *ngFor="let event of events" [ngValue]="event.id">{{ event.name }}</option>
+    </select>
   </div>
 
   <!-- New Station Form -->
@@ -20,20 +28,15 @@
             <label class="form-label">Name</label>
             <input type="text" class="form-control" [(ngModel)]="newStation.name" name="name" required>
           </div>
-          <div class="col-md-3 mb-3">
+          <div class="col-md-6 mb-3">
             <label class="form-label">Benötigte Helfer</label>
-            <input type="number" class="form-control" [(ngModel)]="newStation.neededHelpers" name="neededHelpers" 
-                   min="1" max="50" required>
+            <input type="number" class="form-control" [(ngModel)]="newStation.neededHelpers" name="neededHelpers" min="1" required>
           </div>
-          <div class="col-md-3 mb-3">
-            <div class="form-check mt-4">
-              <input type="checkbox" class="form-check-input" [(ngModel)]="newStation.is18Plus" name="is18Plus" 
-                     [id]="'new-18plus'">
-              <label class="form-check-label" [for]="'new-18plus'">
-                18+ Station
-              </label>
-            </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">18+ Station</label>
+            <input type="checkbox" class="form-check-input ms-2" [(ngModel)]="newStation.is18Plus" name="is18Plus">
           </div>
+          <!-- EventId is set automatically by selectedEventId -->
         </div>
         <div class="d-flex justify-content-end gap-2 mt-4">
           <button type="button" class="btn btn-secondary" (click)="showNewStationForm = false">Abbrechen</button>
