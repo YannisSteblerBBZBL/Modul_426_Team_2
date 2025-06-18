@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.helperapp.app.models.Assignment;
 import com.helperapp.app.models.Station;
 import com.helperapp.app.services.StationService;
 
@@ -52,6 +53,18 @@ public class StationController {
         return stationService.deleteStation(id)
                 ? ResponseEntity.noContent().build()
                 : ResponseEntity.notFound().build();
+    }
+
+    @DeleteMapping("/{id}/force")
+    public ResponseEntity<Void> forceDeleteStation(@PathVariable String id) {
+        return stationService.forceDeleteStation(id)
+                ? ResponseEntity.noContent().build()
+                : ResponseEntity.notFound().build();
+    }
+
+    @GetMapping("/{id}/assignments")
+    public List<Assignment> getAssignmentsByStation(@PathVariable String id) {
+        return stationService.getAssignmentsByStationId(id);
     }
 
     @GetMapping("/event/{eventId}")

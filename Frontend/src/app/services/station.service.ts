@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { Station } from '../models/station.interface';
+import { Assignment } from '../models/assignment.interface';
 
 @Injectable({
   providedIn: 'root'
@@ -34,5 +35,13 @@ export class StationService {
 
   deleteStation(id: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  }
+
+  forceDeleteStation(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}/force`);
+  }
+
+  getAssignmentsByStationId(id: string): Observable<Assignment[]> {
+    return this.http.get<Assignment[]>(`${this.apiUrl}/${id}/assignments`);
   }
 }

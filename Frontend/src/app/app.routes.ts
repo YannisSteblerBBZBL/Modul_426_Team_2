@@ -35,7 +35,17 @@ export const routes: Routes = [
       {
         path: 'manage-helpers',
         loadComponent: () => import('./views/pages/helper-managment/helper-managment.component').then(c => c.HelperManagmentComponent),
-      }
+      },
+      {
+        path: 'manage-events',
+        loadComponent: () => import('./views/pages/manage-events/manage-events.component').then(c => c.ManageEventsComponent),
+        title: 'Manage Events'
+      },
+      {
+        path: 'manage-stations',
+        loadComponent: () => import('./views/pages/manage-stations/manage-stations.component').then(c => c.ManageStationsComponent),
+        title: 'Manage Stations'
+      },
     ]
   },
   {
