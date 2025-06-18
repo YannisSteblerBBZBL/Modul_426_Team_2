@@ -1,7 +1,6 @@
 // Button mixins
 
 @use "sass:color";
-@use "../functions" as *;
 
 @mixin social-button($color) {
   background: $color;
@@ -62,17 +61,15 @@ color: $color;
 
 @mixin button-variant($color) {
   background: $color;
-  border: 1px solid $color;
-  color: #fff;
-
-  &:hover {
-    background: darken-color($color, 10%);
-    border: 1px solid darken-color($color, 10%);
-  }
-
+  border-color: $color;
+  &:hover,
   &:focus,
   &:active {
-    background: lighten-color($color, 10%);
-    border: 1px solid lighten-color($color, 10%);
+    background: color.adjust($color, $lightness: -10%);
+    border-color: $color;
+  }
+  &.active {
+    background: color.adjust($color, $lightness: 10%);
+    border-color: $color;
   }
 }

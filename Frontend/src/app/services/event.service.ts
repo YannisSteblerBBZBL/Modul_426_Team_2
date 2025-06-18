@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { Event, EventDay } from '../models/event.interface';
+import { AppEvent, EventDayDisplay } from '../models/appEvent.interface';
 import { tap } from 'rxjs/operators';
 
 @Injectable({
@@ -13,37 +13,34 @@ export class EventService {
 
   constructor(private http: HttpClient) { }
 
-  getAllEvents(): Observable<Event[]> {
-    return this.http.get<Event[]>(this.apiUrl);
+  getAllEvents(): Observable<AppEvent[]> {
+    return this.http.get<AppEvent[]>(this.apiUrl);
   }
 
-  getEventById(id: string): Observable<Event> {
-    return this.http.get<Event>(`${this.apiUrl}/${id}`);
+  getEventById(id: string): Observable<AppEvent> {
+    return this.http.get<AppEvent>(`${this.apiUrl}/${id}`);
   }
 
-  updateEventDays(id: string, eventDays: EventDay[]): Observable<Event> {
-    return this.http.put<Event>(`${this.apiUrl}/${id}/days`, { eventDays });
+  createEvent(event: AppEvent): Observable<AppEvent> {
+    return this.http.post<AppEvent>(this.apiUrl, event);
   }
 
-  getEvents(): Observable<Event[]> {
-    return this.http.get<Event[]>(this.apiUrl);
+  updateEvent(id: string, event: AppEvent): Observable<AppEvent> {
+    return this.http.put<AppEvent>(`${this.apiUrl}/${id}`, event);
   }
 
-  updateEvent(event: Event): Observable<Event> {
-    return this.http.put<Event>(`${this.apiUrl}/${event.id}`, event);
+  deleteEvent(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 
-  deleteEvent(eventId: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${eventId}`);
+  updateEventDays(id: string, eventDays: { [key: string]: number }[]): Observable<AppEvent> {
+    return this.http.put<AppEvent>(`${this.apiUrl}/eventDays/${id}`, eventDays);
   }
 
-  createEvent(event: Omit<Event, 'id'>): Observable<Event> {
-    return this.http.post<Event>(this.apiUrl, event);
-  }
-
-  setHelperRegistrationStatus(id: string, status: boolean): Observable<Event> {
-    return this.http.put<Event>(`${this.apiUrl}/${id}/registration/${status}`, {}).pipe(
-      tap(response => console.log('Helper registration status updated:', response))
+  setHelperRegistrationStatus(id: string, status: boolean): Observable<AppEvent> {
+    console.log(`Setting registration status for event ${id} to:`, status);
+    return this.http.put<AppEvent>(`${this.apiUrl}/${id}/registration/${status}`, {}).pipe(
+      tap(response => console.log('Received response from server:', response))
     );
   }
 }

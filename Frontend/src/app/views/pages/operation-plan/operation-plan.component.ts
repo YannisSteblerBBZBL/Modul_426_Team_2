@@ -7,7 +7,7 @@ import {
 } from '@angular/cdk/drag-drop';
 import { forkJoin } from 'rxjs';
 import { Assignment } from '../../../models/assignment.interface';
-import { Event, EventDayDisplay } from '../../../models/event.interface';
+import { AppEvent, EventDayDisplay } from '../../../models/appEvent.interface';
 import { Helper } from '../../../models/helper.interface';
 import { Station } from '../../../models/station.interface';
 import { AssignmentService } from '../../../services/assignment.service';
@@ -25,8 +25,8 @@ import { FormsModule } from '@angular/forms';
   imports: [CommonModule, DragDropModule, FormsModule],
 })
 export class OperationPlanComponent implements OnInit {
-  events: Event[] = [];
-  selectedEvent?: Event;
+  events: AppEvent[] = [];
+  selectedEvent: AppEvent | undefined;
   selectedDay: EventDayDisplay | undefined;
   displayDays: EventDayDisplay[] = [];
   assignments: Assignment[] = [];
@@ -42,7 +42,7 @@ export class OperationPlanComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.loadEvents();
+    this.loadData();
   }
 
   private getEventDaysForDisplay(
@@ -57,17 +57,29 @@ export class OperationPlanComponent implements OnInit {
     });
   }
 
-  loadEvents(): void {
+  loadData(): void {
     this.loading = true;
-    this.eventService.getAllEvents().subscribe({
-      next: (events) => {
+    forkJoin({
+      events: this.eventService.getAllEvents(),
+      helpers: this.helperService.getAllHelpers(),
+      stations: this.stationService.getAllStations(),
+    }).subscribe({
+      next: ({ events, helpers, stations }) => {
         this.events = events;
+        this.helpers = helpers;
+        this.stations = stations;
+
+        if (events.length > 0) {
+          // Set initial event and its days
+          this.updateSelectedEvent(events[0].id!);
+        }
+
         this.loading = false;
       },
       error: (error) => {
-        console.error('Error loading events:', error);
+        console.error('Error loading data:', error);
         this.loading = false;
-      }
+      },
     });
   }
 
@@ -75,11 +87,10 @@ export class OperationPlanComponent implements OnInit {
     const event = this.events.find((e) => e.id === eventId);
     if (event) {
       this.selectedEvent = event;
-      if (event.eventDays) {
-        this.displayDays = this.getEventDaysForDisplay(event.eventDays);
-        if (this.displayDays.length > 0) {
-          this.updateSelectedDay(this.displayDays[0]);
-        }
+      this.displayDays = this.getEventDaysForDisplay(event.eventDays);
+
+      if (this.displayDays.length > 0) {
+        this.updateSelectedDay(this.displayDays[0]);
       } else {
         this.selectedDay = undefined;
         this.assignments = [];
@@ -103,20 +114,15 @@ export class OperationPlanComponent implements OnInit {
       .getAssignmentsByEvent(this.selectedEvent.id!)
       .subscribe({
         next: (assignments: Assignment[]) => {
-          if (!this.selectedEvent?.eventDays || !this.selectedDay) {
-            this.assignments = [];
-            this.loading = false;
-            return;
-          }
-
-          const eventDay = this.selectedEvent.eventDays.find(day => Object.keys(day)[0] === this.selectedDay?.date);
+          // Finde die Tagnummer für das ausgewählte Datum
+          const eventDay = this.selectedEvent!.eventDays.find(day => Object.keys(day)[0] === this.selectedDay?.date);
           if (!eventDay) {
             this.assignments = [];
             this.loading = false;
             return;
           }
 
-          const dayNumber = String(eventDay[this.selectedDay.date]);
+          const dayNumber = String(eventDay[this.selectedDay!.date]);
           
           this.assignments = assignments.filter(
             (a) => a.eventDay === dayNumber
@@ -131,13 +137,13 @@ export class OperationPlanComponent implements OnInit {
       });
   }
 
-  onEventChange(event: any): void {
+  onEventChange(event: Event): void {
     const select = event.target as HTMLSelectElement;
     const selectedId = select.value;
     this.updateSelectedEvent(selectedId);
   }
 
-  onDayChange(event: any): void {
+  onDayChange(event: Event): void {
     const select = event.target as HTMLSelectElement;
     const selectedIndex = select.selectedIndex;
     if (selectedIndex >= 0 && selectedIndex < this.displayDays.length) {
@@ -163,10 +169,11 @@ export class OperationPlanComponent implements OnInit {
   }
 
   getHelpersForStation(stationId: string): Helper[] {
-    if (!this.selectedDay || !this.selectedEvent?.eventDays) return [];
+    if (!this.selectedDay) return [];
 
-    const eventDay = this.selectedEvent.eventDays.find(day => Object.keys(day)[0] === this.selectedDay?.date);
-    if (!eventDay || !this.selectedDay) return [];
+    // Finde die Tagnummer für das ausgewählte Datum
+    const eventDay = this.selectedEvent?.eventDays.find(day => Object.keys(day)[0] === this.selectedDay?.date);
+    if (!eventDay) return [];
 
     const dayNumber = String(eventDay[this.selectedDay.date]);
 
@@ -180,10 +187,11 @@ export class OperationPlanComponent implements OnInit {
   }
 
   getUnassignedHelpers(): Helper[] {
-    if (!this.selectedDay || !this.selectedEvent?.eventDays) return [];
+    if (!this.selectedDay) return [];
 
-    const eventDay = this.selectedEvent.eventDays.find(day => Object.keys(day)[0] === this.selectedDay?.date);
-    if (!eventDay || !this.selectedDay) return [];
+    // Finde die Tagnummer für das ausgewählte Datum
+    const eventDay = this.selectedEvent?.eventDays.find(day => Object.keys(day)[0] === this.selectedDay?.date);
+    if (!eventDay) return [];
 
     const dayNumber = String(eventDay[this.selectedDay.date]);
 
@@ -195,13 +203,14 @@ export class OperationPlanComponent implements OnInit {
   }
 
   drop(event: CdkDragDrop<Helper[]>, stationId?: string): void {
-    if (!this.selectedEvent || !this.selectedDay || !this.selectedEvent.eventDays) return;
+    if (!this.selectedEvent || !this.selectedDay) return;
 
     const helper = event.item.data as Helper;
     if (!helper) return;
 
+    // Find the event day number for the selected date
     const eventDay = this.selectedEvent.eventDays.find(day => Object.keys(day)[0] === this.selectedDay?.date);
-    if (!eventDay || !this.selectedDay) return;
+    if (!eventDay) return;
 
     const dayNumber = String(eventDay[this.selectedDay.date]);
 
@@ -251,18 +260,24 @@ export class OperationPlanComponent implements OnInit {
   }
 
   private createNewAssignment(helperId: string, stationId: string): void {
-    if (!this.selectedEvent || !this.selectedDay || !this.selectedEvent.eventDays) {
+    // Logging für Debugging
+    console.log('Event days:', this.selectedEvent?.eventDays);
+    console.log('Selected day:', this.selectedDay);
+
+    if (!this.selectedEvent || !this.selectedDay) {
       console.error('No event or day selected');
       return;
     }
 
+    // Finde die Tagnummer für das ausgewählte Datum
     const eventDay = this.selectedEvent.eventDays.find(day => Object.keys(day)[0] === this.selectedDay?.date);
-    if (!eventDay || !this.selectedDay) {
+    if (!eventDay) {
       console.error('Selected date not found in event days');
       return;
     }
 
     const dayNumber = eventDay[this.selectedDay.date];
+    console.log('Day number:', dayNumber);
 
     const newAssignment: Assignment = {
       eventId: this.selectedEvent.id!,
@@ -271,9 +286,12 @@ export class OperationPlanComponent implements OnInit {
       stationId: stationId,
     };
 
+    console.log('Creating new assignment:', newAssignment);
+
     this.loading = true;
     this.assignmentService.createAssignment(newAssignment).subscribe({
       next: (createdAssignment) => {
+        console.log('Assignment created successfully:', createdAssignment);
         this.assignments.push(createdAssignment);
         this.loading = false;
       },
@@ -314,7 +332,7 @@ export class OperationPlanComponent implements OnInit {
     console.log('- Setting new status to:', newStatus);
 
     this.eventService.setHelperRegistrationStatus(this.selectedEvent.id, newStatus).subscribe({
-      next: (updatedEvent: Event) => {
+      next: (updatedEvent: AppEvent) => {
         console.log('- Received updated event:', updatedEvent);
         console.log('- Updated registration status:', updatedEvent.helperRegistrationOpen);
 

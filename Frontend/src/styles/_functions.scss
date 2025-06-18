@@ -1,24 +1,5 @@
 // Functions
 
-@use "sass:map";
-@use "sass:color";
-
-@function social-color($key) {
-  @return map.get($social-colors, $key);
-}
-
-@function theme-color($key) {
-  @return map.get($theme-colors, $key);
-}
-
-@function darken-color($color, $percentage) {
-  @return color.adjust($color, $lightness: -$percentage);
-}
-
-@function lighten-color($color, $percentage) {
-  @return color.adjust($color, $lightness: $percentage);
-}
-
-@function mix-colors($color1, $color2, $weight: 50%) {
-  @return color.mix($color1, $color2, $weight);
+@function social-color($key: "twitter") {
+  @return map-get($social-colors, $key);
 }

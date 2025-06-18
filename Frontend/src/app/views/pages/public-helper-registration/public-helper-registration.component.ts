@@ -8,7 +8,6 @@ import { EventService } from '../../../services/event.service';
 import { AppEvent } from '../../../models/appEvent.interface';
 import { Station } from '../../../models/station.interface';
 import { StationService } from '../../../services/station.service';
-import { Event } from '../../../models/event.interface';
 
 @Component({
   selector: 'app-public-helper-registration',
@@ -18,13 +17,12 @@ import { Event } from '../../../models/event.interface';
   styleUrl: './public-helper-registration.component.scss'
 })
 export class PublicHelperRegistrationComponent implements OnInit {
-  event?: Event;
+  event: AppEvent | null = null;
   stations: Station[] = [];
   newHelper: Helper = this.getEmptyHelper();
   loading = false;
-  error = '';
+  error: string | null = null;
   availableDays: number[] = [];
-  selectedDays: number[] = [];
 
   constructor(
     private route: ActivatedRoute,
@@ -35,9 +33,9 @@ export class PublicHelperRegistrationComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    const eventId = this.route.snapshot.paramMap.get('id');
+    const eventId = this.route.snapshot.paramMap.get('eventId');
     if (!eventId) {
-      this.error = 'No event ID provided';
+      this.error = 'Event ID nicht gefunden';
       return;
     }
 
@@ -45,20 +43,15 @@ export class PublicHelperRegistrationComponent implements OnInit {
     this.eventService.getEventById(eventId).subscribe({
       next: (event) => {
         if (!event.helperRegistrationOpen) {
-          this.error = 'Helper registration is not open for this event';
-          this.loading = false;
+          this.error = 'Die Helfer-Registrierung ist derzeit geschlossen.';
           return;
         }
-
         this.event = event;
-        if (event.eventDays) {
-          this.availableDays = event.eventDays.map((day, index) => index + 1);
-        }
+        this.availableDays = event.eventDays.map((day, index) => index + 1);
         this.loadStations();
       },
-      error: (error) => {
-        console.error('Error loading event:', error);
-        this.error = 'Error loading event details';
+      error: (err) => {
+        this.error = 'Event nicht gefunden';
         this.loading = false;
       }
     });
@@ -153,18 +146,5 @@ export class PublicHelperRegistrationComponent implements OnInit {
         this.loading = false;
       }
     });
-  }
-
-  onDaySelect(day: number): void {
-    const index = this.selectedDays.indexOf(day);
-    if (index === -1) {
-      this.selectedDays.push(day);
-    } else {
-      this.selectedDays.splice(index, 1);
-    }
-  }
-
-  isDaySelected(day: number): boolean {
-    return this.selectedDays.includes(day);
   }
 } 

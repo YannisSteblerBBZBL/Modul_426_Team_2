@@ -1,12 +1,7 @@
-@use "sass:color";
-@use "functions" as *;
-
 $body-color-dark:                   #d0d6e1 !default;
 $body-bg-dark:                      #0c1427 !default;
 
-$gray-tertiary-bg-dark: mix-colors($gray-700, $gray-900, 50%) !default;
-
-$body-tertiary-bg-dark:             $gray-tertiary-bg-dark !default;
+$body-tertiary-bg-dark:             mix($gray-700, $gray-900, 50%) !default;
 
 $link-color-dark:                   $primary !default;
 

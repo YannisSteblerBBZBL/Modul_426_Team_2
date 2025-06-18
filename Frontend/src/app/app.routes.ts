@@ -29,13 +29,12 @@ export const routes: Routes = [
         loadComponent: () => import('./views/pages/home/home.component').then(c => c.HomeComponent),
       },
       {
-        path: 'manage-events',
-        loadComponent: () => import('./views/pages/manage-events/manage-events.component').then(c => c.ManageEventsComponent),
-        title: 'Manage Events'
+        path: 'operations',
+        loadComponent: () => import('./views/pages/operation-plan/operation-plan.component').then(c => c.OperationPlanComponent),
       },
       {
         path: 'manage-helpers',
-        loadComponent: () => import('./views/pages/helper-managment/helper-managment.component').then(c => c.HelperManagmentComponent)
+        loadComponent: () => import('./views/pages/helper-managment/helper-managment.component').then(c => c.HelperManagmentComponent),
       }
     ]
   },
@@ -49,10 +48,10 @@ export const routes: Routes = [
   },
   { 
     path: 'register-helper/:eventId', 
-    loadComponent: () => import('./views/pages/public-helper-registration/public-helper-registration.component').then(c => c.PublicHelperRegistrationComponent)
+    component: PublicHelperRegistrationComponent 
   },
   {
     path: 'registration-success',
-    loadComponent: () => import('./views/pages/registration-success/registration-success.component').then(c => c.RegistrationSuccessComponent)
+    component: RegistrationSuccessComponent
   }
 ];
