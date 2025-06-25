@@ -3,4 +3,5 @@ export interface Station {
     name: string;
     neededHelpers: number;
     is18Plus: boolean;
+    eventId?: string;
 }

@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { Station } from '../models/station.interface';
+import { Assignment } from '../models/assignment.interface';
 
 @Injectable({
   providedIn: 'root'
@@ -12,7 +13,10 @@ export class StationService {
 
   constructor(private http: HttpClient) { }
 
-  getAllStations(): Observable<Station[]> {
+  getAllStations(eventId?: string): Observable<Station[]> {
+    if (eventId) {
+      return this.http.get<Station[]>(`${this.apiUrl}?eventId=${eventId}`);
+    }
     return this.http.get<Station[]>(this.apiUrl);
   }
 
@@ -21,7 +25,7 @@ export class StationService {
   }
 
   getStationsByEventId(eventId: string): Observable<Station[]> {
-    return this.http.get<Station[]>(`${this.apiUrl}/event/${eventId}`);
+    return this.getAllStations(eventId);
   }
 
   createStation(station: Station): Observable<Station> {
@@ -34,5 +38,13 @@ export class StationService {
 
   deleteStation(id: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  }
+
+  forceDeleteStation(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}/force`);
+  }
+
+  getAssignmentsByStationId(id: string): Observable<Assignment[]> {
+    return this.http.get<Assignment[]>(`${this.apiUrl}/${id}/assignments`);
   }
 }

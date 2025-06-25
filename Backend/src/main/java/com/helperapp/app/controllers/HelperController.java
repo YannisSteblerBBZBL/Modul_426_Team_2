@@ -29,6 +29,11 @@ public class HelperController {
         return helperService.getAllHelpers();
     }
 
+    @GetMapping("/event/{eventId}")
+    public List<Helper> getHelpersByEventId(@PathVariable String eventId) {
+        return helperService.getHelpersByEventId(eventId);
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<Helper> getHelperById(@PathVariable String id) {
         Optional<Helper> helper = helperService.getHelperById(id);

@@ -6,6 +6,8 @@ export interface AppEvent {
     endDate: string;
     eventDays: { [key: string]: number }[];
     helperRegistrationOpen: boolean;
+    status?: 'active' | 'cancelled' | 'completed';
+    hasActiveData?: boolean;
 }
 
 // Interface for the transformed event day structure used in the frontend

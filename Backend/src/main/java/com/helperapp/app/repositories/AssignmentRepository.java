@@ -11,4 +11,5 @@ public interface AssignmentRepository extends MongoRepository<Assignment, String
     boolean existsByHelperIdAndEventDayAndEventId(String helperId, String eventDay, String eventId);
     Optional<Assignment> findByEventIdAndEventDayAndHelperId(String eventId, String eventDay, String helperId);
     List<Assignment> findByEventId(String eventId);
+    List<Assignment> findByStationId(String stationId);
 }

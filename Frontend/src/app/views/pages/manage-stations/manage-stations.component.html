@@ -1,0 +1,131 @@
+<div class="container-fluid p-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="m-0">Stationen verwalten</h2>
+    <button class="btn btn-primary d-flex align-items-center gap-2" (click)="showNewStationForm = !showNewStationForm">
+      <i class="feather icon-plus"></i>
+      <span>Neue Station</span>
+    </button>
+  </div>
+
+  <!-- Event Filter Dropdown -->
+  <div class="mb-4">
+    <label class="form-label">Event auswählen:</label>
+    <select class="form-select w-auto d-inline-block" [(ngModel)]="selectedEventId" (change)="onEventChange()">
+      <option *ngFor="let event of events" [ngValue]="event.id">{{ event.name }}</option>
+    </select>
+  </div>
+
+  <!-- New Station Form -->
+  <div class="card mb-4 new-station-form" *ngIf="showNewStationForm">
+    <div class="card-body">
+      <h5 class="card-title d-flex align-items-center gap-2">
+        <i class="feather icon-map-pin"></i>
+        Neue Station
+      </h5>
+      <form (ngSubmit)="createStation()" #newStationForm="ngForm">
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Name</label>
+            <input type="text" class="form-control" [(ngModel)]="newStation.name" name="name" required>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Benötigte Helfer</label>
+            <input type="number" class="form-control" [(ngModel)]="newStation.neededHelpers" name="neededHelpers" min="1" required>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">18+ Station</label>
+            <input type="checkbox" class="form-check-input ms-2" [(ngModel)]="newStation.is18Plus" name="is18Plus">
+          </div>
+          <!-- EventId is set automatically by selectedEventId -->
+        </div>
+        <div class="d-flex justify-content-end gap-2 mt-4">
+          <button type="button" class="btn btn-secondary" (click)="showNewStationForm = false">Abbrechen</button>
+          <button type="submit" class="btn btn-primary" [disabled]="!newStationForm.form.valid">Speichern</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Loading Spinner -->
+  <div class="text-center my-4" *ngIf="loading">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+  </div>
+
+  <!-- Station Cards Grid -->
+  <div class="row g-4" *ngIf="!loading">
+    <div class="col-md-6 col-lg-4" *ngFor="let station of stations">
+      <!-- Station Card -->
+      <div class="card">
+        <div class="card-body">
+          <!-- View Mode -->
+          <div *ngIf="editingStation?.id !== station.id">
+            <div class="d-flex justify-content-between align-items-start mb-4">
+              <h5 class="card-title m-0">{{station.name}}</h5>
+              <div class="btn-group">
+                <button class="btn btn-sm btn-outline-primary" (click)="startEditing(station)">
+                  <i class="feather icon-edit-2"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-danger" (click)="deleteStation(station)">
+                  <i class="feather icon-trash-2"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="station-info">
+              <div class="info-item">
+                <i class="feather icon-users"></i>
+                <span class="fw-bold">{{station.neededHelpers}}</span> Helfer benötigt
+              </div>
+              <div class="info-item">
+                <i class="feather icon-shield"></i>
+                <span *ngIf="station.is18Plus" class="badge bg-danger">18+</span>
+                <span *ngIf="!station.is18Plus" class="badge bg-success">Alle Altersgruppen</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Edit Mode -->
+          <form *ngIf="editingStation?.id === station.id" (ngSubmit)="saveStation(editingStation!)">
+            <div class="mb-3">
+              <label class="form-label">Name</label>
+              <input type="text" class="form-control" [(ngModel)]="editingStation!.name" name="name" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Benötigte Helfer</label>
+              <input type="number" class="form-control" [(ngModel)]="editingStation!.neededHelpers" name="neededHelpers" 
+                     min="1" max="50" required>
+            </div>
+            <div class="mb-3">
+              <div class="form-check">
+                <input type="checkbox" class="form-check-input" [(ngModel)]="editingStation!.is18Plus" name="is18Plus" 
+                       [id]="'edit-18plus-' + station.id">
+                <label class="form-check-label" [for]="'edit-18plus-' + station.id">
+                  18+ Station
+                </label>
+              </div>
+            </div>
+            <div class="d-flex justify-content-end gap-2">
+              <button type="button" class="btn btn-secondary" (click)="cancelEditing()">Abbrechen</button>
+              <button type="submit" class="btn btn-primary">Speichern</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div class="text-center my-5" *ngIf="!loading && stations.length === 0">
+    <div class="empty-state">
+      <i class="feather icon-map-pin" style="font-size: 4rem; color: #6c757d;"></i>
+      <h4 class="mt-3">Keine Stationen vorhanden</h4>
+      <p class="text-muted">Erstellen Sie Ihre erste Station, um zu beginnen.</p>
+      <button class="btn btn-primary" (click)="showNewStationForm = true">
+        <i class="feather icon-plus me-2"></i>
+        Erste Station erstellen
+      </button>
+    </div>
+  </div>
+</div>

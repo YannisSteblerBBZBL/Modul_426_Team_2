@@ -2,13 +2,13 @@ package com.helperapp.app.services;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.helperapp.app.models.Event;
+import com.helperapp.app.models.Assignment;
 import com.helperapp.app.models.Station;
+import com.helperapp.app.repositories.AssignmentRepository;
 import com.helperapp.app.repositories.EventRepository;
 import com.helperapp.app.repositories.StationRepository;
 import com.helperapp.app.security.JwtHelper;
@@ -25,11 +25,16 @@ public class StationService {
     @Autowired
     private EventRepository eventRepository;
 
-    public List<Station> getAllStations() {
+    @Autowired
+    private AssignmentRepository assignmentRepository;
+
+    public List<Station> getAllStations(String eventId) {
         String currentUserId = jwtHelper.getUserIdFromToken();
-        return stationRepository.findAll().stream()
-                .filter(station -> station.getUserId().equals(currentUserId))
-                .collect(Collectors.toList());
+        if (eventId != null && !eventId.isEmpty()) {
+            return stationRepository.findByUserIdAndEventId(currentUserId, eventId);
+        } else {
+            return stationRepository.findByUserId(currentUserId);
+        }
     }
 
     public Optional<Station> getStationById(String id) {
@@ -40,6 +45,9 @@ public class StationService {
 
     public Station createStation(Station station) {
         station.setUserId(jwtHelper.getUserIdFromToken());
+        if (station.getEventId() == null || station.getEventId().isEmpty()) {
+            throw new IllegalArgumentException("Station muss einem Event zugeordnet werden.");
+        }
         return stationRepository.save(station);
     }
 
@@ -66,14 +74,41 @@ public class StationService {
         return false;
     }
 
-    public List<Station> getStationsByEventId(String eventId) {
-        // Get the event to find its userId
-        Optional<Event> event = eventRepository.findById(eventId);
-        if (event.isEmpty()) {
-            return List.of(); // Return empty list if event not found
+    public List<Assignment> getAssignmentsByStationId(String stationId) {
+        String currentUserId = jwtHelper.getUserIdFromToken();
+        
+        // First verify that the user owns this station
+        Optional<Station> station = stationRepository.findById(stationId);
+        if (station.isEmpty() || !station.get().getUserId().equals(currentUserId)) {
+            return List.of(); // Return empty list if station not found or not owned by user
         }
+        
+        // Return all assignments for this station
+        return assignmentRepository.findByStationId(stationId);
+    }
 
-        // Get all stations for this event's user
-        return stationRepository.findByUserId(event.get().getUserId());
+    public boolean forceDeleteStation(String id) {
+        String currentUserId = jwtHelper.getUserIdFromToken();
+        Optional<Station> station = stationRepository.findById(id);
+
+        if (station.isPresent() && station.get().getUserId().equals(currentUserId)) {
+            // Delete all assignments for this station first
+            List<Assignment> assignments = assignmentRepository.findByStationId(id);
+            assignmentRepository.deleteAll(assignments);
+            
+            // Then delete the station
+            stationRepository.deleteById(id);
+            return true;
+        }
+        return false;
+    }
+
+    public List<Station> getStationsByUserIdAndEventId(String eventId) {
+        String currentUserId = jwtHelper.getUserIdFromToken();
+        return stationRepository.findByUserIdAndEventId(currentUserId, eventId);
+    }
+
+    public List<Station> getStationsByEventId(String eventId) {
+        return stationRepository.findByEventId(eventId);
     }
 }

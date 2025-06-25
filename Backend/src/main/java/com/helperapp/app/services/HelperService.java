@@ -4,7 +4,6 @@ import java.time.LocalDate;
 import java.time.Period;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -29,9 +28,12 @@ public class HelperService {
 
     public List<Helper> getAllHelpers() {
         String currentUserId = jwtHelper.getUserIdFromToken();
-        return helperRepository.findAll().stream()
-                .filter(h -> h.getUserId().equals(currentUserId))
-                .collect(Collectors.toList());
+        return helperRepository.findByUserIdOrderByFirstnameAsc(currentUserId);
+    }
+
+    public List<Helper> getHelpersByEventId(String eventId) {
+        String currentUserId = jwtHelper.getUserIdFromToken();
+        return helperRepository.findByUserIdAndEventId(currentUserId, eventId);
     }
 
     public Optional<Helper> getHelperById(String id) {
@@ -44,6 +46,8 @@ public class HelperService {
         String currentUserId = jwtHelper.getUserIdFromToken();
         helper.setUserId(currentUserId);
         helper.setAge(calculateAge(helper.getBirthdate()));
+        // eventId can be null for general helper management
+        // It will be set when the helper is registered for a specific event
         return helperRepository.save(helper);
     }
 
@@ -52,6 +56,8 @@ public class HelperService {
                 .filter(Event::isHelperRegistrationOpen)
                 .map(event -> {
                     helper.setUserId(event.getUserId());
+                    helper.setEventId(eventId);
+                    helper.setAge(calculateAge(helper.getBirthdate()));
                     return helperRepository.save(helper);
                 });
     }

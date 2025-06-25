@@ -16,13 +16,16 @@ import { HelperService } from '../../../services/helper.service';
 import { StationService } from '../../../services/station.service';
 import { CommonModule, NgFor, NgIf } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
+import { SweetAlert2Module } from '@sweetalert2/ngx-sweetalert2';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-operation-plan',
   templateUrl: './operation-plan.component.html',
   styleUrls: ['./operation-plan.component.scss'],
   standalone: true,
-  imports: [CommonModule, DragDropModule, FormsModule],
+  imports: [CommonModule, DragDropModule, FormsModule, NgbModule, SweetAlert2Module],
 })
 export class OperationPlanComponent implements OnInit {
   events: AppEvent[] = [];
@@ -61,13 +64,9 @@ export class OperationPlanComponent implements OnInit {
     this.loading = true;
     forkJoin({
       events: this.eventService.getAllEvents(),
-      helpers: this.helperService.getAllHelpers(),
-      stations: this.stationService.getAllStations(),
     }).subscribe({
-      next: ({ events, helpers, stations }) => {
+      next: ({ events }) => {
         this.events = events;
-        this.helpers = helpers;
-        this.stations = stations;
 
         if (events.length > 0) {
           // Set initial event and its days
@@ -89,12 +88,31 @@ export class OperationPlanComponent implements OnInit {
       this.selectedEvent = event;
       this.displayDays = this.getEventDaysForDisplay(event.eventDays);
 
-      if (this.displayDays.length > 0) {
-        this.updateSelectedDay(this.displayDays[0]);
-      } else {
-        this.selectedDay = undefined;
-        this.assignments = [];
-      }
+      // Load event-specific helpers and stations
+      this.loading = true;
+      forkJoin({
+        helpers: this.helperService.getHelpersByEventId(eventId),
+        stations: this.stationService.getAllStations(eventId)
+      }).subscribe({
+        next: ({ helpers, stations }) => {
+          this.helpers = helpers;
+          this.stations = stations;
+          this.loading = false;
+          
+          if (this.displayDays.length > 0) {
+            this.updateSelectedDay(this.displayDays[0]);
+          } else {
+            this.selectedDay = undefined;
+            this.assignments = [];
+          }
+        },
+        error: (error) => {
+          console.error('Error loading helpers and stations for event:', error);
+          this.helpers = [];
+          this.stations = [];
+          this.loading = false;
+        }
+      });
     }
   }
 
@@ -220,7 +238,7 @@ export class OperationPlanComponent implements OnInit {
       const station = this.stations.find((s) => s.id === stationId);
 
       if (station?.is18Plus && isUnderage) {
-        alert(`${helper.firstname} darf nicht auf eine 18+ Station zugewiesen werden.`);
+        this.showWarningAlert(`${helper.firstname} darf nicht auf eine 18+ Station zugewiesen werden.`);
         return;
       }
     }
@@ -349,13 +367,13 @@ export class OperationPlanComponent implements OnInit {
           const message = this.selectedEvent.helperRegistrationOpen 
             ? 'Die Helfer-Registrierung wurde erfolgreich geöffnet. Sie können den Link jetzt kopieren und teilen.' 
             : 'Die Helfer-Registrierung wurde geschlossen.';
-          alert(message);
+          this.showSuccessAlert(message);
         }
         this.loading = false;
       },
       error: (err: Error) => {
         console.error('Error updating registration status:', err);
-        alert('Fehler beim Aktualisieren des Registrierungsstatus.');
+        this.showErrorAlert('Fehler beim Aktualisieren des Registrierungsstatus.');
         this.loading = false;
       }
     });
@@ -371,12 +389,38 @@ export class OperationPlanComponent implements OnInit {
     const url = this.getRegistrationUrl();
     navigator.clipboard.writeText(url).then(
       () => {
-        alert('Der Registrierungs-Link wurde in die Zwischenablage kopiert!');
+        this.showSuccessAlert('Der Registrierungs-Link wurde in die Zwischenablage kopiert!');
       },
       (err) => {
         console.error('Could not copy URL:', err);
-        alert('Fehler beim Kopieren des Links. Bitte versuchen Sie es erneut.');
+        this.showErrorAlert('Fehler beim Kopieren des Links. Bitte versuchen Sie es erneut.');
       }
     );
+  }
+
+  private showSuccessAlert(message: string): void {
+    Swal.fire({
+      title: 'Erfolg',
+      text: message,
+      icon: 'success',
+      timer: 2000,
+      showConfirmButton: false
+    });
+  }
+
+  private showErrorAlert(message: string): void {
+    Swal.fire({
+      title: 'Fehler',
+      text: message,
+      icon: 'error'
+    });
+  }
+
+  private showWarningAlert(message: string): void {
+    Swal.fire({
+      title: 'Warnung',
+      text: message,
+      icon: 'warning'
+    });
   }
 }

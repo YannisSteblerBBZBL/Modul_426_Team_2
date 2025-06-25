@@ -34,6 +34,15 @@
                    (change)="onBirthdateChange(newHelper)">
           </div>
 
+          <!-- Event Selection -->
+          <div class="col-md-12 mb-3">
+            <label class="form-label">Event</label>
+            <select class="form-select" [(ngModel)]="newHelper.eventId" name="eventId" required (change)="onNewHelperEventChange()">
+              <option [ngValue]="undefined" disabled selected>Bitte Event wählen</option>
+              <option *ngFor="let event of events" [ngValue]="event.id">{{ event.name }}</option>
+            </select>
+          </div>
+
           <!-- Presence Days -->
           <div class="col-12 preferences-section">
             <h6 class="section-title">
@@ -41,7 +50,7 @@
               Anwesenheitstage
             </h6>
             <div class="d-flex flex-wrap gap-3">
-              <div *ngFor="let day of availableDays" class="form-check">
+              <div *ngFor="let day of getAvailableDaysForHelper(newHelper)" class="form-check">
                 <input type="checkbox" class="form-check-input" 
                        [checked]="isPresent(newHelper, day)"
                        (change)="togglePresence(newHelper, day)"
@@ -58,7 +67,7 @@
               Bevorzugte Stationen
             </h6>
             <div class="d-flex flex-wrap gap-3">
-              <div *ngFor="let station of stations" class="form-check">
+              <div *ngFor="let station of getStationsForNewHelper()" class="form-check">
                 <input type="checkbox" class="form-check-input"
                        [checked]="isStationPreferenced(newHelper, station.id!)"
                        (change)="togglePreferencedStation(newHelper, station.id!)"
@@ -135,13 +144,19 @@
                 <i class="feather icon-user"></i>
                 {{helper.age}} Jahre
               </div>
+              <div class="info-item" *ngIf="helper.eventId">
+                <i class="feather icon-award"></i>
+                <span class="badge bg-warning text-dark">{{getEventName(helper.eventId)}}</span>
+              </div>
             </div>
 
             <!-- Presence Days Display -->
             <div class="mb-4">
               <h6 class="card-subtitle">Anwesenheitstage</h6>
               <div class="d-flex gap-1 flex-wrap mt-2">
-                <span *ngFor="let day of helper.presence" class="badge bg-primary">Tag {{day}}</span>
+                <ng-container *ngFor="let day of getAvailableDaysForHelper(helper)">
+                  <span class="badge bg-primary" *ngIf="isPresent(helper, day)">Tag {{day}}</span>
+                </ng-container>
                 <span *ngIf="!helper.presence?.length" class="text-muted small">Keine Tage ausgewählt</span>
               </div>
             </div>
@@ -196,7 +211,7 @@
                 Anwesenheitstage
               </h6>
               <div class="d-flex flex-wrap gap-3">
-                <div *ngFor="let day of availableDays" class="form-check">
+                <div *ngFor="let day of getAvailableDaysForHelper(editingHelper!)" class="form-check">
                   <input type="checkbox" class="form-check-input"
                          [checked]="isPresent(editingHelper!, day)"
                          (change)="togglePresence(editingHelper!, day)"
@@ -213,7 +228,7 @@
                 Bevorzugte Stationen
               </h6>
               <div class="d-flex flex-wrap gap-3">
-                <div *ngFor="let station of stations" class="form-check">
+                <div *ngFor="let station of getStationsForHelper(editingHelper!)" class="form-check">
                   <input type="checkbox" class="form-check-input"
                          [checked]="isStationPreferenced(editingHelper!, station.id!)"
                          (change)="togglePreferencedStation(editingHelper!, station.id!)"

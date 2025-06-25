@@ -4,40 +4,89 @@
             <h4 class="page-title">Manage Events</h4>
         </div>
         <div class="col-auto">
-            <button class="btn btn-primary" (click)="toggleNewEventForm()">
+            <button class="btn btn-primary" (click)="showCreateEventForm()">
                 <i class="fas fa-plus"></i> + Add Event
             </button>
         </div>
     </div>
 
-    <!-- New Event Form -->
-    <div class="row mb-4" *ngIf="showNewEventForm">
-        <div class="col-12 col-md-6 col-lg-4">
-            <div class="card h-100 border-primary">
-                <div class="card-header bg-primary text-white">
-                    <strong>New Event</strong>
+    <!-- Create Event Form -->
+    <div class="row mb-4" *ngIf="showCreateForm">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Create New Event</h5>
                 </div>
                 <div class="card-body">
-                    <div class="mb-3">
-                        <label class="form-label">Name</label>
-                        <input type="text" class="form-control" [(ngModel)]="newEvent.name">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label class="form-label">Event Name *</label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       [(ngModel)]="newEvent.name"
+                                       placeholder="Enter event name">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label class="form-label">Status</label>
+                                <select class="form-control" [(ngModel)]="newEvent.status">
+                                    <option value="active">Active</option>
+                                    <option value="cancelled">Cancelled</option>
+                                    <option value="completed">Completed</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
-                    <div class="mb-3">
+                    
+                    <div class="form-group mb-3">
                         <label class="form-label">Description</label>
-                        <input type="text" class="form-control" [(ngModel)]="newEvent.description">
+                        <textarea class="form-control" 
+                                  rows="3"
+                                  [(ngModel)]="newEvent.description"
+                                  placeholder="Enter event description"></textarea>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Start Date</label>
-                        <input type="datetime-local" class="form-control" [(ngModel)]="newEvent.startDate">
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label class="form-label">Start Date *</label>
+                                <input type="datetime-local" 
+                                       class="form-control" 
+                                       [(ngModel)]="newEvent.startDate">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label class="form-label">End Date *</label>
+                                <input type="datetime-local" 
+                                       class="form-control" 
+                                       [(ngModel)]="newEvent.endDate">
+                            </div>
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">End Date</label>
-                        <input type="datetime-local" class="form-control" [(ngModel)]="newEvent.endDate">
+                    
+                    <div class="form-group mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" 
+                                   type="checkbox" 
+                                   [(ngModel)]="newEvent.helperRegistrationOpen"
+                                   id="helperRegistrationOpen">
+                            <label class="form-check-label" for="helperRegistrationOpen">
+                                Helper Registration Open
+                            </label>
+                        </div>
                     </div>
-                </div>
-                <div class="card-footer d-flex justify-content-end gap-2">
-                    <button class="btn btn-sm btn-success" (click)="createEvent()">Create</button>
-                    <button class="btn btn-sm btn-secondary" (click)="toggleNewEventForm()">Cancel</button>
+                    
+                    <div class="d-flex justify-content-end gap-2">
+                        <button class="btn btn-secondary" (click)="cancelCreateEvent()">
+                            <i class="fas fa-times"></i> Cancel
+                        </button>
+                        <button class="btn btn-success" (click)="createEvent()">
+                            <i class="fas fa-plus"></i> Create Event
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -69,11 +118,11 @@
                     <div class="form-group mb-3">
                         <label class="form-label">Description</label>
                         <div *ngIf="!editingEvent[event.id ?? '']">{{event.description}}</div>
-                        <input *ngIf="editingEvent[event.id ?? '']"
-                               type="text"
-                               class="form-control"
-                               [(ngModel)]="tempEventData[event.id ?? ''].description"
-                               placeholder="Event Description">
+                        <textarea *ngIf="editingEvent[event.id ?? '']"
+                                  class="form-control"
+                                  rows="3"
+                                  [(ngModel)]="tempEventData[event.id ?? ''].description"
+                                  placeholder="Event Description"></textarea>
                     </div>
 
                     <div class="form-group mb-3">
@@ -109,6 +158,24 @@
                             <option value="completed">Completed</option>
                         </select>
                     </div>
+
+                    <div class="form-group mb-3">
+                        <label class="form-label">Helper Registration</label>
+                        <div *ngIf="!editingEvent[event.id ?? '']">
+                            <span class="badge" [ngClass]="event.helperRegistrationOpen ? 'bg-success' : 'bg-secondary'">
+                                {{event.helperRegistrationOpen ? 'Open' : 'Closed'}}
+                            </span>
+                        </div>
+                        <div *ngIf="editingEvent[event.id ?? '']" class="form-check">
+                            <input class="form-check-input" 
+                                   type="checkbox" 
+                                   [(ngModel)]="tempEventData[event.id ?? ''].helperRegistrationOpen"
+                                   [id]="'helperRegistrationOpen_' + event.id">
+                            <label class="form-check-label" [for]="'helperRegistrationOpen_' + event.id">
+                                Helper Registration Open
+                            </label>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="card-footer">
@@ -131,7 +198,6 @@
                             </button>
                         </div>
                         <button class="btn btn-sm btn-danger" 
-                                [disabled]="event.hasActiveData"
                                 (click)="deleteEvent(event)">
                             <i class="fas fa-trash"></i> Delete
                         </button>

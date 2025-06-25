@@ -5,6 +5,8 @@ import { Helper } from '../../../models/helper.interface';
 import { HelperService } from '../../../services/helper.service';
 import { StationService } from '../../../services/station.service';
 import { Station } from '../../../models/station.interface';
+import { EventService } from '../../../services/event.service';
+import { AppEvent } from '../../../models/appEvent.interface';
 
 @Component({
   selector: 'app-helper-managment',
@@ -16,15 +18,16 @@ import { Station } from '../../../models/station.interface';
 export class HelperManagmentComponent implements OnInit {
   helpers: Helper[] = [];
   stations: Station[] = [];
+  events: AppEvent[] = [];
   loading = false;
   editingHelper: Helper | null = null;
   newHelper: Helper = this.getEmptyHelper();
   showNewHelperForm = false;
-  availableDays = [1, 2, 3, 4, 5]; // Tage des Events
 
   constructor(
     private helperService: HelperService,
-    private stationService: StationService
+    private stationService: StationService,
+    private eventService: EventService
   ) {}
 
   ngOnInit(): void {
@@ -49,10 +52,12 @@ export class HelperManagmentComponent implements OnInit {
     this.loading = true;
     Promise.all([
       this.helperService.getAllHelpers().toPromise(),
-      this.stationService.getAllStations().toPromise()
-    ]).then(([helpers, stations]) => {
+      this.stationService.getAllStations().toPromise(),
+      this.eventService.getAllEvents().toPromise()
+    ]).then(([helpers, stations, events]) => {
       this.helpers = helpers || [];
       this.stations = stations || [];
+      this.events = events || [];
       this.loading = false;
     }).catch(error => {
       console.error('Error loading data:', error);
@@ -103,6 +108,10 @@ export class HelperManagmentComponent implements OnInit {
   }
 
   createHelper(): void {
+    if (!this.newHelper.eventId) {
+      alert('Bitte wählen Sie ein Event aus.');
+      return;
+    }
     this.helperService.createHelper(this.newHelper).subscribe({
       next: (createdHelper) => {
         this.helpers.push(createdHelper);
@@ -111,6 +120,12 @@ export class HelperManagmentComponent implements OnInit {
       },
       error: (error) => console.error('Error creating helper:', error)
     });
+  }
+
+  onNewHelperEventChange(): void {
+    // Reset presence and preferences when event changes
+    this.newHelper.presence = [];
+    this.newHelper.preferencedStations = [];
   }
 
   calculateAge(birthdate: string): string {
@@ -177,5 +192,28 @@ export class HelperManagmentComponent implements OnInit {
   getStationName(stationId: string): string {
     const station = this.stations.find(s => s.id === stationId);
     return station ? station.name : 'Unbekannt';
+  }
+
+  getEventName(eventId: string): string {
+    const event = this.events.find(e => e.id === eventId);
+    return event ? event.name : 'Unbekannt';
+  }
+
+  getAvailableDaysForHelper(helper: Helper): number[] {
+    if (!helper.eventId) return [];
+    const event = this.events.find(e => e.id === helper.eventId);
+    if (!event || !event.eventDays) return [];
+    // eventDays is an array of objects like [{ '2024-06-01': 1 }, ...]
+    return event.eventDays.map(dayObj => Object.values(dayObj)[0] as number);
+  }
+
+  getStationsForHelper(helper: Helper): Station[] {
+    if (!helper.eventId) return [];
+    return this.stations.filter(station => station.eventId === helper.eventId);
+  }
+
+  getStationsForNewHelper(): Station[] {
+    if (!this.newHelper.eventId) return [];
+    return this.stations.filter(station => station.eventId === this.newHelper.eventId);
   }
 }
