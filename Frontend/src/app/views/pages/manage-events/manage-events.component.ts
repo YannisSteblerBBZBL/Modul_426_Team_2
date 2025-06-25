@@ -164,6 +164,11 @@ export class ManageEventsComponent implements OnInit {
             status: this.tempEventData[eventId].status || event.status
         };
 
+        if (new Date(updatedEvent.startDate) > new Date(updatedEvent.endDate)) {
+            alert('Start date must be before or equal to end date.');
+            return;
+        }
+
         this.eventService.updateEvent(eventId, updatedEvent).subscribe({
             next: (response) => {
                 const index = this.events.findIndex(e => e.id === eventId);

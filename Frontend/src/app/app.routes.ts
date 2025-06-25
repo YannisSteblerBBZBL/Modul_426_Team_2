@@ -33,8 +33,16 @@ export const routes: Routes = [
         loadComponent: () => import('./views/pages/operation-plan/operation-plan.component').then(c => c.OperationPlanComponent),
       },
       {
+        path: 'manage-events',
+        loadComponent: () => import('./views/pages/manage-events/manage-events.component').then(c => c.ManageEventsComponent),
+      },
+      {
         path: 'manage-helpers',
         loadComponent: () => import('./views/pages/helper-managment/helper-managment.component').then(c => c.HelperManagmentComponent),
+      },
+      {
+        path: 'apps',
+        loadComponent: () => import('./views/pages/apps/apps.component').then(c => c.AppsComponent),
       },
       {
         path: 'manage-events',
